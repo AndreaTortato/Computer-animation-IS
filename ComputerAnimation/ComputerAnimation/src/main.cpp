@@ -1,7 +1,7 @@
 // Computer Animations framework
 // Authors: Eva Valls and Victor Ubieto
 // Reference: c++ Game Animation Programming by Gabor Szauer
-
+ 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -19,11 +19,11 @@
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
-#define NK_GLFW_GL4_IMPLEMENTATION
+#define NK_GLFW_GL3_IMPLEMENTATION
 #define NK_KEYSTATE_BASED_INPUT
 
 #include "nuklear.h"
-#include "nuklear_glfw_gl4.h"
+#include "nuklear_glfw_gl3.h"
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
@@ -104,7 +104,8 @@ int main(void)
 	fflush(stdout);
 
 	/* Nuklear (GUI API) */
-	nkContext = nk_glfw3_init(window, NK_GLFW3_INSTALL_CALLBACKS, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
+	nkContext = nk_glfw3_init(window, NK_GLFW3_INSTALL_CALLBACKS);
+
 	// Set up font
 	struct nk_font_atlas* atlas;
 	nk_glfw3_font_stash_begin(&atlas);
@@ -334,7 +335,7 @@ int main(void)
 				accumulator.imguiGPU += (double)(gpuStopTime - gpuStartTime) / 1000000.0;
 			}
 			glQueryCounter(gGpuImguiStart, GL_TIMESTAMP);
-			nk_glfw3_render(NK_ANTI_ALIASING_OFF);
+			nk_glfw3_render(NK_ANTI_ALIASING_OFF, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
 			glQueryCounter(gGpuImguiStop, GL_TIMESTAMP);
 		}
 		timerStop = glfwGetTime();

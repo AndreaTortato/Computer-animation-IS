@@ -28,6 +28,9 @@ protected:
 	Attribute<vec3>* posAttrib;
 	Attribute<vec3>* normAttrib;
 	Attribute<vec2>* uvAttrib;
+	Attribute<vec4>* weightAttrib;
+	Attribute<ivec4>* influenceAttrib;
+
 
 public:
 	Mesh();

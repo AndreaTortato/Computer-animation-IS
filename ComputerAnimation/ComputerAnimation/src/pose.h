@@ -11,6 +11,7 @@ protected:
 public:
 	
 	Pose(); // Empty constructor
+    
 	// Initialize the pose given another pose
 	Pose(const Pose& p);
 	// Initialize the pose given the number of joints of the pose

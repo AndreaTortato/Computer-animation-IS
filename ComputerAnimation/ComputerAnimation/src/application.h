@@ -10,7 +10,7 @@
 #define NK_KEYSTATE_BASED_INPUT
 
 #include "nuklear.h"
-#include "nuklear_glfw_gl4.h"
+#include "nuklear_glfw_gl3.h"
 #include "math/vec2.h"
 
 class Application {

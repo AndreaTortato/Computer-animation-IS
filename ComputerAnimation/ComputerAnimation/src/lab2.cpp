@@ -54,6 +54,7 @@ void Lab2::init() {
 
 	// load shaders to render the meshes
 	shader = new Shader("shaders/shader.vs", "shaders/shader.fs");
+    shader_skin = new Shader("shaders/skinned.vs", "shaders/shader.fs");
 
 	currentTask = TASK1;
 }
@@ -87,13 +88,13 @@ void Lab2::initPose() {
 
 	// left upper leg
 	Transform leftUpperLegTransform;
-	leftUpperLegTransform.position = vec3(-1.0f, 0.0f, 0.0f); //left of hip
+	leftUpperLegTransform.position = vec3(-1.0f, -1.0f, 0.0f); //left of hip
 	pose.setLocalTransform(2, leftUpperLegTransform);
 	pose.setParent(2, 0);  // hip child
 
 	// right upper leg
 	Transform rightUpperLegTransform;
-	rightUpperLegTransform.position = vec3(1.0f, 0.0f, 0.0f); //right of hip
+	rightUpperLegTransform.position = vec3(1.0f, -1.0f, 0.0f); //right of hip
 	pose.setLocalTransform(3, rightUpperLegTransform);
 	pose.setParent(3, 0);  // hip child
 
@@ -113,7 +114,7 @@ void Lab2::initPose() {
 	// pose helper drawing
 	poseHelper = new DebugDraw();
 	// For each joint a line (bone) has to be draw from the joint world (global) position to the parent's joint world position
-	for (unsigned int i = 0; i < pose.size(); i++) 
+	for (unsigned int i = 1; i < pose.size(); i++) 
 	{
 		// TO DO:
 		// Get the world position of the joint and push it to the poseHelper
@@ -122,11 +123,13 @@ void Lab2::initPose() {
 
 		// If the joint has a parent (index >= 0), get the world position of the parent and push it to the poseHelper
 		int jointParent = pose.getParent(i);
-		if (jointParent > 0)
+        vec3 parentWorldPos = vec3(0.0);
+		if (jointParent >= 0)
 		{
-			vec3 parentWorldPos = pose.getGlobalTransform(jointParent).position;
+            parentWorldPos = pose.getGlobalTransform(jointParent).position;
 			poseHelper->push(parentWorldPos);
 		}
+
 	}
 	// TO DO: Uncomment
 	poseHelper->updateOpenGLBuffers();
@@ -153,21 +156,26 @@ void Lab2::initSkeleton() {
 		// 2. Get the world matrix of the joint multiplying the local matrix of the joint by the inverse of the parent's world matrix
 		// 3. Push the world position of the joint into the skeletonHelper
 
-		mat4 parentWorldMatrix = skeleton.getInvBindPose()[bindPose.getParent(i)];
+		int parentIndex = bindPose.getParent(i);
+
+		mat4 parentWorldMatrix = skeleton.getInvBindPose()[parentIndex];
 		mat4 jointWorldMatrix = transformToMat4(bindPose.getLocalTransform(i)) * parentWorldMatrix;
-		vec3 jointWorldPos = vec3{ jointWorldMatrix.position.x,jointWorldMatrix.position.y,jointWorldMatrix.position.z };
+		vec3 jointWorldPos = mat4ToTransform(jointWorldMatrix).position;
 		skeletonHelper->push(jointWorldPos);
 
-	// Do the same with its parent to get the final position of the bone
+        //std::cout << "TASK2 prima: Rest joint: " << i << " parent: " << parentIndex << " at " << jointWorldPos.x << ", " << jointWorldPos.y << ", " << jointWorldPos.z << std::endl;
 
-		int parentIndex = bindPose.getParent(i);
 		if (parentIndex >= 0)
 		{
+			// Do the same with its parent to get the final position of the bone
+
 			mat4 parentWorldMatrix2 = skeleton.getInvBindPose()[parentIndex];
 			mat4 boneWorldMatrix = transformToMat4(bindPose.getLocalTransform(parentIndex)) * parentWorldMatrix2;
-			vec3 parentWorldPos = vec3{ parentWorldMatrix2.position.x, parentWorldMatrix2.position.y, parentWorldMatrix2.position.z };
+			vec3 parentWorldPos = mat4ToTransform(boneWorldMatrix).position;
 			skeletonHelper->push(parentWorldPos);
 		}
+
+        //std::cout << "TASK2 dopo: Rest joint: " << i << " parent: " << parentIndex << " at " << jointWorldPos.x << ", " << jointWorldPos.y << ", " << jointWorldPos.z << std::endl;
 
 	}
 	// TO DO: Uncomment
@@ -179,53 +187,56 @@ void Lab2::initSkeletonFromGLTF(cgltf_data* data) {
 
 	// TO DO: initialize the skeleton attribute loading the skeleton of the gltf: use the loadSkeleton function
 	skeleton = loadSkeleton(data);
+    Pose restPose = skeleton.getRestPose(); //rest pose broken
+    Pose bindPose = skeleton.getBindPose();
 
 	// Load the rest pose and the bind pose from the skeleton loaded from the gltf
-	Pose restPose = skeleton.getRestPose();
-	Pose bindPose = skeleton.getBindPose();
 
-	for (unsigned int i = 0; i < restPose.size(); i++) 
-	{
-		// Do the same as in initPose() function
-		// Get the world position of the joint and push it to the poseHelper
-		vec3 jointWorldPos = restPose.getGlobalTransform(i).position;
-		restPoseHelper->push(jointWorldPos);
-	
-		// If the joint has a parent (index >= 0), get the world position of the parent and push it to the poseHelper
-		int jointParent = restPose.getParent(i);
-		if (jointParent >= 0)
-		{
-			vec3 parentWorldPos = restPose.getGlobalTransform(jointParent).position;
-			restPoseHelper->push(parentWorldPos);
-		}
-	}
-	//TO DO: Uncomment
-	restPoseHelper->updateOpenGLBuffers();
+    for (unsigned int i = 1; i < restPose.size(); i++)
+    {
+        // Do the same as in initPose() function
+        // Get the world position of the joint and push it to the poseHelper
+        vec3 jointWorldPos = restPose.getGlobalTransform(i).position;
+        restPoseHelper->push(jointWorldPos);
 
-	for (unsigned int i = 0; i < bindPose.size(); i++) 
-	{
-		// Do the same as in initPose() function
-		// Get the world position of the joint and push it to the poseHelper
-		vec3 jointWorldPos = bindPose.getGlobalTransform(i).position;
-		bindPoseHelper->push(jointWorldPos);
-	
-		// If the joint has a parent (index >= 0), get the world position of the parent and push it to the poseHelper
-		int jointParent = bindPose.getParent(i);
-		if (jointParent >= 0)
-		{
-			vec3 parentWorldPos = bindPose.getGlobalTransform(jointParent).position;
-			bindPoseHelper->push(parentWorldPos);
-		}
-	}
-	//TO DO: Uncomment
-	bindPoseHelper->updateOpenGLBuffers();
+        // If the joint has a parent (index >= 0), get the world position of the parent and push it to the poseHelper
+        int jointParent = restPose.getParent(i);
+
+        if (jointParent >= 0)
+        {
+            vec3 parentWorldPos = restPose.getGlobalTransform(jointParent).position;
+            restPoseHelper->push(parentWorldPos);
+        }
+
+    }
+    //TO DO: Uncomment
+    restPoseHelper->updateOpenGLBuffers(); 
+    
+    for (unsigned int i = 1; i < bindPose.size(); i++)
+    {
+        // Do the same as in initPose() function
+        // Get the world position of the joint and push it to the poseHelper
+        vec3 jointWorldPos = bindPose.getGlobalTransform(i).position;
+        bindPoseHelper->push(jointWorldPos);
+
+        // If the joint has a parent (index >= 0), get the world position of the parent and push it to the poseHelper
+        int jointParent = bindPose.getParent(i);
+
+        if (jointParent >= 0)
+        {
+            vec3 parentWorldPos = bindPose.getGlobalTransform(jointParent).position;
+            bindPoseHelper->push(parentWorldPos);
+        }
+    }
+    //TO DO: Uncomment
+    bindPoseHelper->updateOpenGLBuffers();
+    
 }
 
 // TASK 4
 void Lab2::initMeshesFromGLTF(cgltf_data* data) {
 	// TO DO: initialize the vector of meshes with the loaded meshes from the gltf file: use the loadeMeshes function
-	//meshes = ...;
-	// 
+	 meshes = loadMeshes(data);
 }
 
 void Lab2::render(float inAspectRatio) {
@@ -270,6 +281,24 @@ void Lab2::render(float inAspectRatio) {
 			//diffuseTexture->UnSet(0);
 			shader->UnBind();
 			break;
+
+        case TASK5:
+            // GPU Skinned Mesh
+            shader_skin->Bind();
+            // send the uniforms to the GPU to render the meshes
+            Uniform<mat4>::Set(shader_skin->GetUniform("model"), model);
+            Uniform<mat4>::Set(shader_skin->GetUniform("view"), camera->view_matrix);
+            Uniform<mat4>::Set(shader_skin->GetUniform("projection"), camera->projection_matrix);
+            Uniform<vec3>::Set(shader_skin->GetUniform("light"), vec3(1, 1, 1));
+            //diffuseTexture->Set(shader_skin->GetUniform("tex0"), 0);
+            for (unsigned int i = 0, size = (unsigned int)meshes.size(); i < size; ++i) {
+                meshes[i].bind(shader_skin->GetAttribute("position"), shader_skin->GetAttribute("normal"), shader_skin->GetAttribute("texCoord"), shader_skin->GetAttribute("weights"), shader_skin->GetAttribute("joints"));
+                meshes[i].draw();
+                meshes[i].unBind(shader_skin->GetAttribute("position"), shader_skin->GetAttribute("normal"), shader_skin->GetAttribute("texCoord"), shader_skin->GetAttribute("weights"), shader_skin->GetAttribute("joints"));
+            }
+            //diffuseTexture->UnSet(0);
+            shader_skin->UnBind();
+            break;
 	}
 	
 	if (showAxes) {
@@ -300,12 +329,14 @@ void Lab2::update(float inDeltaTime) {
 	lastMousePosition = mousePosition;
 
 	// TO DO: do the skinning (call CPUskin) for each mesh using the loaded skeleton and the rest pose (or the bind pose if the applyBindPose attribute is active) from the gltf file
-	if (applyBindPose) {
-		// For each mesh, apply the skinning using the bind pose of the skeleton
-	}
-	else {
-		// For each mesh, apply the skinning using the rest pose of the skeleton
-	}
+	if (applyBindPose) pose = skeleton.getBindPose();
+	else pose = skeleton.getRestPose();
+    
+    // For each mesh, apply the skinning using the rest pose of the skeleton
+    for (int i = 0; i < meshes.size(); ++i)
+    {
+        meshes[i].CPUSkin(skeleton, pose);
+    }
 }
 
 // Example of using Nuklear GUI API: https://github.com/vurtun/nuklear/blob/master/example/extended.c
@@ -396,6 +427,32 @@ void Lab2::ImGui(nk_context* context) {
 				nk_property_float(context, "#y", range_float_min, &objectTransform.scale.y, range_float_max, 0.1, 0.1);
 				nk_property_float(context, "#z", range_float_min, &objectTransform.scale.z, range_float_max, 0.1, 0.1);
 				break;
+
+            case TASK5:
+                nk_layout_row_static(context, 25, 200, 1);
+                nk_label(context, "SKINNING GPU", NK_TEXT_CENTERED);
+                nk_layout_row_static(context, 25, 200, 1);
+                nk_checkbox_label(context, "Apply bind pose", &applyBindPose);
+                nk_layout_row_static(context, 25, 200, 1);
+                nk_label(context, "Position", NK_TEXT_LEFT);
+                nk_property_float(context, "#x", range_float_min, &objectTransform.position.x, range_float_max, 0.1, 0.1);
+                nk_property_float(context, "#y", range_float_min, &objectTransform.position.y, range_float_max, 0.1, 0.1);
+                nk_property_float(context, "#z", range_float_min, &objectTransform.position.z, range_float_max, 0.1, 0.1);
+
+                nk_layout_row_static(context, 25, 200, 1);
+                nk_label(context, "Rotation", NK_TEXT_LEFT);
+                nk_property_float(context, "#x", range_float_min, &objectTransform.rotation.x, range_float_max, 0.1, 0.1);
+                nk_property_float(context, "#y", range_float_min, &objectTransform.rotation.y, range_float_max, 0.1, 0.1);
+                nk_property_float(context, "#z", range_float_min, &objectTransform.rotation.z, range_float_max, 0.1, 0.1);
+                nk_property_float(context, "#w", range_float_min, &objectTransform.rotation.w, range_float_max, 0.1, 0.1);
+                normalize(objectTransform.rotation);
+
+                nk_layout_row_static(context, 25, 200, 1);
+                nk_label(context, "Scale", NK_TEXT_LEFT);
+                nk_property_float(context, "#x", range_float_min, &objectTransform.scale.x, range_float_max, 0.1, 0.1);
+                nk_property_float(context, "#y", range_float_min, &objectTransform.scale.y, range_float_max, 0.1, 0.1);
+                nk_property_float(context, "#z", range_float_min, &objectTransform.scale.z, range_float_max, 0.1, 0.1);
+                break;
 		}
 	}
 
@@ -411,8 +468,8 @@ void Lab2::shutdown() {
 	delete restPoseHelper;
 	delete bindPoseHelper;
 	delete shader;
+    delete shader_skin;
 }
-
 
 void Lab2::onKeyDown(int key, int scancode) { 
 	// keycodes: https://www.glfw.org/docs/3.3/group__keys.html
@@ -454,6 +511,7 @@ void Lab2::onLeftMouseButtonUp() { };
 void Lab2::onMiddleMouseButtonDown() {
 	moving = true;
 };
+
 void Lab2::onMiddleMouseButtonUp() {
 	moving = false;
 };

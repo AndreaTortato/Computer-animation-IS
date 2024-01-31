@@ -1,4 +1,5 @@
 #include "pose.h"
+#include <iostream>
 
 Pose::Pose() { }
 
@@ -47,19 +48,27 @@ Transform Pose::getLocalTransform(unsigned int id) {
 	return joints[id];
 }
 
+
 // get global (world) transform of the joint
 Transform Pose::getGlobalTransform(unsigned int id) {
 	// TO DO: use "combine()" function to combine two transforms
-	Transform globalTransform;
-
+	Transform globalTransform = joints[id];
 	int parent = getParent(id);
-	if (parent != -1) //only hip has parent = -1 = no parent
-	{
-		globalTransform = combine(joints[id], joints[parent]);
-		//get next parent of the joint if there is one and combine again
-		getGlobalTransform(parent);
-	}
 
+    ////THIS WORKS FOR BIND POSE 
+	if (parent >= 0) //only hip has no parent = -1 
+    {
+        globalTransform = combine(joints[parent], globalTransform);
+    }
+    
+    ////THIS WORKS FOR REST POSE
+    //while (parent >= 0)
+    //{
+    //    globalTransform = combine(joints[parent], globalTransform);
+    //    parent = getParent(parent);
+    //}
+
+    
 	return globalTransform;
 }
 
@@ -68,11 +77,14 @@ std::vector<mat4> Pose::getGlobalMatrices() {
 	unsigned int numJoints = size();
 	std::vector<mat4> out(numJoints);
 
+    Transform globalTransform;
+    mat4 globalTransformMatrix;
+
 	// TO DO: For every joint, find the global transform (using getGlobalTransform), convert it into a matrix, and store the result in a vector of matrices
 	for (unsigned int i = 0; i < numJoints; ++i) 
 	{
-		Transform globalTransform = getGlobalTransform(i);
-		mat4 globalTransformMatrix = transformToMat4(globalTransform);
+		globalTransform = getGlobalTransform(i);
+		globalTransformMatrix = transformToMat4(globalTransform);
 		out[i] = globalTransformMatrix;
 	}
 

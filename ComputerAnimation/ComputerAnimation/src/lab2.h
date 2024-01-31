@@ -38,8 +38,8 @@ protected:
 
 	// for task 4
 	std::vector<Mesh> meshes;
-	int applyBindPose = 0;
 	Shader* shader;
+    Shader* shader_skin;
 	Texture* diffuseTexture = NULL;
 
 	Camera* camera;
@@ -47,6 +47,9 @@ protected:
 	bool moving = false;
 
 public:
+
+    int applyBindPose = 0;
+
 	void init();
 	void update(float inDeltaTime);
 	void render(float inAspectRatio);

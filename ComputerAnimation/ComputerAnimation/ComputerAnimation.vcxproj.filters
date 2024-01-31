@@ -165,5 +165,6 @@
   <ItemGroup>
     <None Include="shaders\shader.fs" />
     <None Include="shaders\shader.vs" />
+    <None Include="shaders\skinned.vs" />
   </ItemGroup>
 </Project>

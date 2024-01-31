@@ -107,7 +107,7 @@ Pose loadBindPose(const cgltf_data* data) {
 			Transform parent = worldBindPose[parentId];
 			//TODO: invert the parent transformation and combine the transformations
 			Transform invertparent = inverse(parent);
-			current = combine(parent, current);
+			current = combine(current, parent);
 		}
 		//TODO: set the local transform of the joint to the bind pose
 		bindPose.setLocalTransform(i, current);
@@ -136,7 +136,7 @@ Skeleton loadSkeleton(const cgltf_data* data) {
 	Pose restPose = loadRestPose(data);
 	Pose bindPose = loadBindPose(data);
 	std::vector<std::string> jointNames = loadJointNames(data);
-
+    
 	// Construct and return the Skeleton
 	Skeleton skeleton;
 	skeleton.set(restPose, bindPose, jointNames);
