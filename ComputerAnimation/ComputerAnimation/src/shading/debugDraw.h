@@ -5,6 +5,7 @@
 #include "attribute.h"
 #include "../math/vec3.h"
 #include "../math/mat4.h"
+#include "../animation/pose.h"
 #include <vector>
 
 
@@ -32,6 +33,7 @@ public:
 
 	void updateOpenGLBuffers();
 	void draw(DebugDrawMode mode, const vec3& color, const mat4& mvp);
+	void fromPose(Pose& pose);
 };
 
 #endif

@@ -2,12 +2,12 @@
 
 #include "application.h"
 #include "shading/debugDraw.h"
-#include "pose.h"
-#include "skeleton.h"
+#include "animation/pose.h"
+#include "animation/skeleton.h"
 #include "camera.h"
 #include "shading/texture.h"
 #include "shading/shader.h"
-#include "mesh.h"
+#include "shading/mesh.h"
 #include "cgltf.h"
 
 class Lab2 : public Application {

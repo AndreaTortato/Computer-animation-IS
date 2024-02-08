@@ -4,6 +4,7 @@
 
 #include "lab1.h"
 #include "lab2.h"
+#include "lab3.h"
 
 LabSelector::LabSelector() {
 	mCurrentLab = 0;
@@ -13,9 +14,9 @@ LabSelector::LabSelector() {
 void LabSelector::ImGui(nk_context* context, float xPos) {
 
 	// Select lab
-	static int selected = 1;
-	static const char* options[] = { "Lab 1", "Lab 2" };
-	enum examples { LAB1 = 0, LAB2 = 1 };
+	static int selected = 2;
+	static const char* options[] = { "Lab 1", "Lab 2", "Lab 3" };
+	enum examples { LAB1 = 0, LAB2 = 1, LAB3 = 2 };
 
 	if (nk_begin(context, "Lab settings", nk_rect(5.0f, 5.0f, 300.0f, 70), NK_WINDOW_MOVABLE | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_MINIMIZABLE)) {
 
@@ -28,21 +29,27 @@ void LabSelector::ImGui(nk_context* context, float xPos) {
 			nk_combo_end(context);
 		}
 
-		switch (selected) 
-		{
-		case LAB1:
-			if (mCurrentLab == 0 || typeid(*mCurrentLab) != typeid(Lab1)) {
-				mCurrentLab = new Lab1();
-				mCurrentLab->init();
-			}
-			break;
-		
-		case LAB2:
-			if (mCurrentLab == 0 || typeid(*mCurrentLab) != typeid(Lab2)) {
-				mCurrentLab = new Lab2();
-				mCurrentLab->init();
-			}
-			break;
+		switch (selected) {			
+			case LAB1:
+				if (mCurrentLab == 0 || typeid(*mCurrentLab) != typeid(Lab1)) {
+					mCurrentLab = new Lab1();
+					mCurrentLab->init();
+				}
+				break;
+			case LAB2:
+				if (mCurrentLab == 0 || typeid(*mCurrentLab) != typeid(Lab2)) {
+					mCurrentLab = new Lab2();
+					mCurrentLab->init();
+				}
+				break;
+			case LAB3:
+				if (mCurrentLab == 0 || typeid(*mCurrentLab) != typeid(Lab3)) {
+					mCurrentLab = new Lab3();
+					mCurrentLab->init();
+				}
+				break;
+			default:
+				break;
 		}
 	}
 	nk_end(context);
@@ -50,7 +57,7 @@ void LabSelector::ImGui(nk_context* context, float xPos) {
 
 LabSelector::~LabSelector() {
 	if (mIsRunning) {
-		std::cout << "Error, lab selector is still running";
+		std::cout << "Error, lab selector is still running\n";
 	}
 	if (mCurrentLab != 0) {
 		std::cout << "Error lab still exists\n";
@@ -77,7 +84,7 @@ void LabSelector::shutdown() {
 		mCurrentLab->shutdown();
 		delete mCurrentLab;
 	}
-	mCurrentLab = 0;
+	mCurrentLab = NULL;
 	mIsRunning = false;
 }
 

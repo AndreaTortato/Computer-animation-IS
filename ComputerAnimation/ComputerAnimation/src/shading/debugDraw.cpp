@@ -94,3 +94,24 @@ void DebugDraw::draw(DebugDrawMode mode, const vec3& color, const mat4& mvp) {
 	mShader->UnBind();
 }
 
+void DebugDraw::fromPose(Pose& pose) {
+	unsigned int requiredVerts = 0;
+	unsigned int numJoints = pose.size();
+	for (unsigned int i = 0; i < numJoints; ++i) {
+		if (pose.getParent(i) < 0) {
+			continue;
+		}
+
+		requiredVerts += 2;
+	}
+
+	mPoints.resize(requiredVerts);
+	for (unsigned int i = 0; i < numJoints; ++i) {
+		if (pose.getParent(i) < 0) {
+			continue;
+		}
+
+		mPoints.push_back(pose.getGlobalTransform(i).position);
+		mPoints.push_back(pose.getGlobalTransform(pose.getParent(i)).position);
+	}
+}

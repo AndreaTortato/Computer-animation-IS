@@ -2,7 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include "../math/transform.h"
-#include "../skeleton.h"
+#include "../animation/skeleton.h"
 
 //takes a path and returns a cgltf_data pointer
 cgltf_data* loadGLTFFile(const char* path) {
@@ -76,16 +76,13 @@ Pose loadBindPose(const cgltf_data* data) {
 
 		//for each joint in the skin, get the inverse bind pose matrix
 		unsigned int numJoints = skin->joints_count;
-		for (unsigned int j = 0; j < numJoints; j++) 
-		{
+		for (unsigned int j = 0; j < numJoints; j++) {
 			//get the 16 values of the inverse bind matrix and put them into a mat4
 			float* matrix = &(invBindAccessor[j * 16]);
 			mat4 invBindMatrix = mat4(matrix);
-
-			Transform bindTransform;
-			//TODO: invert the matrix (to get the transfrom matrix of the joint) and convert it into a transform
-			bindTransform = mat4ToTransform(inverse(invBindMatrix));
-
+			// invert, convert to transform
+			mat4 bindMatrix = inverse(invBindMatrix);
+			Transform bindTransform = mat4ToTransform(bindMatrix);
 			//set the transform into the array of transforms of the joints in the bind pose (world bind pose)
 			cgltf_node* jointNode = skin->joints[j];
 			int jointIndex = GLTFHelpers::getNodeIndex(jointNode, data->nodes, numBones);
@@ -95,21 +92,13 @@ Pose loadBindPose(const cgltf_data* data) {
 
 	//convert the world bind pose to a regular bind pose
 	Pose bindPose = restPose;
-
-	for (unsigned int i = 0; i < numBones; i++) 
-	{
+	for (unsigned int i = 0; i < numBones; ++i) {
 		Transform current = worldBindPose[i];
-		int parentId = bindPose.getParent(i);
-
-		//if the bone has a parent, bring it into parent space (local space)
-		if (parentId >= 0) 
-		{
-			Transform parent = worldBindPose[parentId];
-			//TODO: invert the parent transformation and combine the transformations
-			Transform invertparent = inverse(parent);
-			current = combine(current, parent);
+		int p = bindPose.getParent(i);
+		if (p >= 0) { // Bring into parent space
+			Transform parent = worldBindPose[p];
+			current = combine(inverse(parent), current);
 		}
-		//TODO: set the local transform of the joint to the bind pose
 		bindPose.setLocalTransform(i, current);
 	}
 	return bindPose;
@@ -132,15 +121,11 @@ std::vector<std::string> loadJointNames(const cgltf_data* data) {
 }
 
 Skeleton loadSkeleton(const cgltf_data* data) {
-	//TODO: create an skeleton loading the bind pose, the rest pose and the joint names from the gltf data 
-	Pose restPose = loadRestPose(data);
-	Pose bindPose = loadBindPose(data);
-	std::vector<std::string> jointNames = loadJointNames(data);
-    
-	// Construct and return the Skeleton
-	Skeleton skeleton;
-	skeleton.set(restPose, bindPose, jointNames);
-	return skeleton;
+	return Skeleton(
+		loadRestPose(data),
+		loadBindPose(data),
+		loadJointNames(data)
+	);
 }
 
 std::vector<Mesh> loadMeshes(const cgltf_data* data) {
@@ -189,6 +174,47 @@ std::vector<Mesh> loadMeshes(const cgltf_data* data) {
 	return result;
 }
 
+std::vector<Clip> loadAnimationClips(cgltf_data* data) {
+	unsigned int nuclips = data->animations_count;
+	unsigned int numNodes = data->nodes_count;
+
+	std::vector<Clip> result;
+	result.resize(nuclips);
+
+	for (unsigned int i = 0; i < nuclips; ++i) {
+		// set the name of the clip
+		result[i].setName(data->animations[i].name);
+
+		// each channel of a glTF file is an animation track
+		unsigned int numChannels = data->animations[i].channels_count;
+		for (unsigned int j = 0; j < numChannels; ++j) {
+			cgltf_animation_channel& channel = data->animations[i].channels[j];
+			cgltf_node* target = channel.target_node;
+
+			// find the index of the node that the current channel affects
+			int nodeId = GLTFHelpers::getNodeIndex(target, data->nodes, numNodes);
+			if (channel.target_path == cgltf_animation_path_type_translation) {
+				VectorTrack& track = result[i][nodeId].getPositionTrack();
+				// convert the track into an animation track
+				GLTFHelpers::trackFromChannel<vec3, 3>(track, channel);
+			}
+			else if (channel.target_path == cgltf_animation_path_type_scale) {
+				VectorTrack& track = result[i][nodeId].getScaleTrack();
+				// convert the track into an animation track
+				GLTFHelpers::trackFromChannel<vec3, 3>(track, channel);
+			}
+			else if (channel.target_path == cgltf_animation_path_type_rotation) {
+				QuaternionTrack& track = result[i][nodeId].getRotationTrack();
+				// convert the track into an animation track
+				GLTFHelpers::trackFromChannel<quat, 4>(track, channel);
+			}
+		} // End num channels loop
+		result[i].recalculateDuration();
+	} // End num clips loop
+
+	return result;
+}
+
 //Gets the local transform of cgltf_node
 Transform GLTFHelpers::getLocalTransform(cgltf_node& n) {
 	Transform result;
@@ -226,20 +252,17 @@ int GLTFHelpers::getNodeIndex(cgltf_node* node, cgltf_node* allNodes, unsigned i
 
 //Reads the floating-point values of a gltf accessor and put them into a vector of floats
 void GLTFHelpers::getScalarValues(std::vector<float>& out, unsigned int compCount, const cgltf_accessor& inAccessor) {
-
 	out.resize(inAccessor.count * compCount);
 	for (cgltf_size i = 0; i < inAccessor.count; ++i) {
 		cgltf_accessor_read_float(&inAccessor, i, &out[i * compCount], compCount);
 	}
 }
 
-
 /*
 It takes a mesh and a cgltf_attribute function, along with some additional data required for parsing.
 The attribute contains one of our mesh components, such as the position, normal, UV coordinate, weights, or influences.
 This attribute provides the appropriate mesh data
 */
-
 void GLTFHelpers::meshFromAttribute(Mesh& outMesh, cgltf_attribute& attribute, cgltf_skin* skin, cgltf_node* nodes, unsigned int nodeCount) {
 	cgltf_attribute_type attribType = attribute.type;
 	cgltf_accessor& accessor = *attribute.data;
@@ -323,6 +346,61 @@ void GLTFHelpers::meshFromAttribute(Mesh& outMesh, cgltf_attribute& attribute, c
 			influences.push_back(joints);
 		}
 		break;
+		}
+	}
+}
+
+// converts a glTF animation channel into a VectorTrack or a QuaternionTrack
+template<typename T, int N>
+void GLTFHelpers::trackFromChannel(Track<T, N>& result, const cgltf_animation_channel& channel) {
+	cgltf_animation_sampler& sampler = *channel.sampler;
+	Interpolation interpolation = Interpolation::Constant;
+
+	// make sure the Interpolation type of the track matches the cgltf_interpolation_type type of the sampler
+	if (sampler.interpolation == cgltf_interpolation_type_linear) {
+		interpolation = Interpolation::Linear;
+	}
+	else if (sampler.interpolation == cgltf_interpolation_type_cubic_spline) {
+		interpolation = Interpolation::Cubic;
+	}
+	bool isSamplerCubic = interpolation == Interpolation::Cubic;
+	result.setInterpolation(interpolation);
+
+	// convert sampler input and output accessors into linear arrays of floating-point numbers
+	std::vector<float> time; // times
+	getScalarValues(time, 1, *sampler.input);
+
+	std::vector<float> val; // values
+	getScalarValues(val, N, *sampler.output);
+
+	unsigned int numFrames = sampler.input->count;
+	unsigned int compCount = val.size() / time.size(); // components (vec3 or quat) per frame
+	// resize the track to have enough room to store all the frames
+	result.resize(numFrames);
+
+	// parse the time and value arrays into frame structures
+	for (unsigned int i = 0; i < numFrames; ++i) {
+		int baseIndex = i * compCount;
+		Frame<N>& frame = result[i];
+		// offset used to deal with cubic tracks since the input and output tangents are as large as the number of components
+		int offset = 0;
+
+		frame.time = time[i];
+
+		// read input tangent (only if the sample is cubic)
+		for (int comp = 0; comp < N; ++comp) {
+			frame.in[comp] = isSamplerCubic ?
+				val[baseIndex + offset++] : 0.0f;
+		}
+		// read the value
+		for (int comp = 0; comp < N; ++comp) {
+			frame.value[comp] = val[baseIndex +
+				offset++];
+		}
+		// read the output tangent (only if the sample is cubic)
+		for (int comp = 0; comp < N; ++comp) {
+			frame.out[comp] = isSamplerCubic ?
+				val[baseIndex + offset++] : 0.0f;
 		}
 	}
 }

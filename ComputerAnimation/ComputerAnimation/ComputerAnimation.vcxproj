@@ -133,19 +133,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\animation\blending.cpp" />
+    <ClCompile Include="src\animation\clip.cpp" />
+    <ClCompile Include="src\animation\track.cpp" />
+    <ClCompile Include="src\animation\transformTrack.cpp" />
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\external\cgltf.c" />
     <ClCompile Include="src\external\stb_image.cpp" />
     <ClCompile Include="src\lab1.cpp" />
     <ClCompile Include="src\lab2.cpp" />
+    <ClCompile Include="src\lab3.cpp" />
     <ClCompile Include="src\loaders\gLTFLoader.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\math\mat4.cpp" />
     <ClCompile Include="src\math\quat.cpp" />
     <ClCompile Include="src\math\transform.cpp" />
     <ClCompile Include="src\math\vec3.cpp" />
-    <ClCompile Include="src\mesh.cpp" />
-    <ClCompile Include="src\pose.cpp" />
+    <ClCompile Include="src\shading\mesh.cpp" />
+    <ClCompile Include="src\animation\pose.cpp" />
     <ClCompile Include="src\labSelector.cpp" />
     <ClCompile Include="src\shading\attribute.cpp" />
     <ClCompile Include="src\shading\debugDraw.cpp" />
@@ -154,9 +159,14 @@
     <ClCompile Include="src\shading\shader.cpp" />
     <ClCompile Include="src\shading\texture.cpp" />
     <ClCompile Include="src\shading\uniform.cpp" />
-    <ClCompile Include="src\skeleton.cpp" />
+    <ClCompile Include="src\animation\skeleton.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\animation\blending.h" />
+    <ClInclude Include="src\animation\clip.h" />
+    <ClInclude Include="src\animation\frame.h" />
+    <ClInclude Include="src\animation\track.h" />
+    <ClInclude Include="src\animation\transformTrack.h" />
     <ClInclude Include="src\application.h" />
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\external\cgltf.h" />
@@ -165,6 +175,7 @@
     <ClInclude Include="src\external\stb_image.h" />
     <ClInclude Include="src\lab1.h" />
     <ClInclude Include="src\lab2.h" />
+    <ClInclude Include="src\lab3.h" />
     <ClInclude Include="src\loaders\gLTFLoader.h" />
     <ClInclude Include="src\math\mat4.h" />
     <ClInclude Include="src\math\quat.h" />
@@ -172,8 +183,8 @@
     <ClInclude Include="src\math\vec2.h" />
     <ClInclude Include="src\math\vec3.h" />
     <ClInclude Include="src\math\vec4.h" />
-    <ClInclude Include="src\mesh.h" />
-    <ClInclude Include="src\pose.h" />
+    <ClInclude Include="src\shading\mesh.h" />
+    <ClInclude Include="src\animation\pose.h" />
     <ClInclude Include="src\labSelector.h" />
     <ClInclude Include="src\shading\attribute.h" />
     <ClInclude Include="src\shading\debugDraw.h" />
@@ -182,12 +193,11 @@
     <ClInclude Include="src\shading\shader.h" />
     <ClInclude Include="src\shading\texture.h" />
     <ClInclude Include="src\shading\uniform.h" />
-    <ClInclude Include="src\skeleton.h" />
+    <ClInclude Include="src\animation\skeleton.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\shader.fs" />
     <None Include="shaders\shader.vs" />
-    <None Include="shaders\skinned.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
