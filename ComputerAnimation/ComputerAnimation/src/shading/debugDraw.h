@@ -1,13 +1,12 @@
-#ifndef _H_DEBUGLINE_
-#define _H_DEBUGLINE_
+#pragma once
 
 #include "shader.h"
 #include "attribute.h"
+#include <vector>
 #include "../math/vec3.h"
 #include "../math/mat4.h"
 #include "../animation/pose.h"
-#include <vector>
-
+#include "../animation/ikSolver.h"
 
 enum class DebugDrawMode {
 	Lines, Loop, Strip, Points, Triangles
@@ -31,9 +30,10 @@ public:
 	vec3& operator[](unsigned int index);
 	void push(const vec3& v);
 
+	void fromPose(Pose& pose);
+	void linesFromIKSolver(IKSolver& solver);
+	void pointsFromIKSolver(IKSolver& solver);
+
 	void updateOpenGLBuffers();
 	void draw(DebugDrawMode mode, const vec3& color, const mat4& mvp);
-	void fromPose(Pose& pose);
 };
-
-#endif

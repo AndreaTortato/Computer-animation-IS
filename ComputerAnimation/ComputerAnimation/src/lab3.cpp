@@ -88,18 +88,18 @@ void Lab3::init() {
 	// Get the rotation track of the joint that you want to apply the animation. Assign this rotation track to a refrence QuaternionTrack variable
 	QuaternionTrack &qt_la = clip[13].getRotationTrack(); // idx 13 corresponds to left arm joint
 	// [CA] To do: Resize the track with the number of frames and assign the type of interpolation
-	qt_la.resize(5);
+	qt_la.resize(3); //5
 	// [CA] To do: Create the quaternion frames
 	qt_la[0] = makeQuaternionFrame(0.0f, quat(0.0f, 0.0f, 0.0f, 1.0f), quat(0.0f, 0.0f, 0.707f, 0.707f), quat(0.0f, 0.0f, 0.0f, 1.0f));
 	qt_la[1] = makeQuaternionFrame(1.0f, quat(0.0f, 0.0f, 0.0f, 1.0f), quat(0.0f, 0.0f, 0.0f, -1.0f), quat(0.0f, 0.0f, 0.0f, 1.0f));
-	qt_la[2] = makeQuaternionFrame(2.0f, quat(0.0f, 0.0f, 0.0f, 1.0f), quat(0.0f, 0.0f, 0.707f, -0.707f), quat(0.0f, 0.0f, 0.0f, 1.0f));
-	qt_la[3] = makeQuaternionFrame(3.0f, quat(0.0f, 0.0f, 0.0f, 1.0f), quat(0.0f, 0.0f, 0.0f, -1.0f), quat(0.0f, 0.0f, 0.0f, 1.0f));
-	qt_la[4] = makeQuaternionFrame(4.0f, quat(0.0f, 0.0f, 0.0f, 1.0f), quat(0.0f, 0.0f, 0.707f, 0.707f), quat(0.0f, 0.0f, 0.0f, 1.0f));
+	qt_la[2] = makeQuaternionFrame(2.0f, quat(0.0f, 0.0f, 0.0f, 1.0f), quat(0.0f, 0.0f, 0.707f, 0.707f), quat(0.0f, 0.0f, 0.0f, 1.0f));
+	//qt_la[3] = makeQuaternionFrame(3.0f, quat(0.0f, 0.0f, 0.0f, 1.0f), quat(0.0f, 0.0f, 0.0f, -1.0f), quat(0.0f, 0.0f, 0.0f, 1.0f));
+	//qt_la[4] = makeQuaternionFrame(4.0f, quat(0.0f, 0.0f, 0.0f, 1.0f), quat(0.0f, 0.0f, 0.707f, 0.707f), quat(0.0f, 0.0f, 0.0f, 1.0f));
 	// [CA] To do: Assign the transformation track to the track of the clip for the specific joint
 	clip[13].getRotationTrack() = qt_la;
 	// [CA] To do: Recalculate the duration of the clip
 	clip.recalculateDuration();
-
+	
 	QuaternionTrack& qt_ra = clip[24].getRotationTrack(); // idx 24 corresponds to right fore-arm joint
 	// [CA] To do: Resize the track with the number of frames and assign the type of interpolation
 	qt_ra.resize(3);
@@ -117,9 +117,10 @@ void Lab3::init() {
 	additiveBase = makeAdditivePose(skeleton, clips[additiveIndex]);
 	clips[additiveIndex].setLooping(false);
 	additiveTime = 0.0f;
+	addPose = skeleton.getRestPose();
 
 	// Set current task
-	currentTask = TASK4;
+	currentTask = TASK3;
 }
 
 VectorFrame Lab3::makeVectorFrame(float time, const vec3& in, const vec3& value, const vec3& out) {
@@ -237,12 +238,11 @@ void Lab3::update(float inDeltaTime) {
 		 case TASK4:
 		 {
 			 // [CA] To do: Sample YOUR CLIP
-			 animInfo.playback = clip.sample(animInfo.animatedPose, currentTime + additiveTime);
+			 animInfo.playback = clips[animInfo.clip].sample(animInfo.animatedPose, currentTime);
 
 			 // [CA] To do: Update the addPose using the additiveTime and apply additive blending (remember that our blend root index is -1)
-			 addPose = makeAdditivePose(skeleton, clips[animInfo.clip]);
-			 Pose basePose = animInfo.animatedPose; // skeleton.getRestPose();
-			 add(addPose, addPose, addPose, basePose, -1);
+			 addPose = clip.sample(animInfo.animatedPose, additiveTime);
+			 add(animInfo.animatedPose, animInfo.animatedPose, addPose, additiveBase, -1);
 
 			 // [CA] To do: Update poseMatrices the animInfo
 			 animInfo.poseMatrices = animInfo.animatedPose.getGlobalMatrices();
@@ -290,7 +290,7 @@ void Lab3::ImGui(nk_context* context) {
 				{
 					track.setInterpolation(Interpolation::Cubic);
 					
-					const char* frameIndex[]  = { "1", "2", "3", "4", "5"}; // [CA] To do: update with the nº of frames of the track you created
+					const char* frameIndex[]  = { "1", "2", "3", "4", "5"}; // [CA] To do: update with the nï¿½ of frames of the track you created
 					nk_layout_row_static(context, 25, 200, 1);
 					nk_label(context, "Edit track slopes", NK_TEXT_CENTERED);
 					nk_layout_row_static(context, 25, 200, 1);
@@ -310,13 +310,21 @@ void Lab3::ImGui(nk_context* context) {
 				break;
 			case TASK3:
 				interpolationType = nk_combo(context, interpolation, 3, interpolationType, 25, nk_vec2(200, 200));
-				if (interpolationType == 0) clip[13].getRotationTrack().setInterpolation(Interpolation::Constant);
-				if (interpolationType == 1) clip[13].getRotationTrack().setInterpolation(Interpolation::Linear);
+				if (interpolationType == 0)
+				{
+					clip[13].getRotationTrack().setInterpolation(Interpolation::Constant);
+					clip[24].getRotationTrack().setInterpolation(Interpolation::Constant);
+				}
+				if (interpolationType == 1)
+				{
+					clip[13].getRotationTrack().setInterpolation(Interpolation::Linear);
+					clip[24].getRotationTrack().setInterpolation(Interpolation::Linear);
+				}
 				if (interpolationType == 2)
 				{
 					clip[13].getRotationTrack().setInterpolation(Interpolation::Cubic);
 
-					const char* frameIndex[] = { "1", "2", "3", "4", "5"}; // [CA] To do: update with the nº of frames of the track you created
+					const char* frameIndex[] = { "1", "2", "3"}; // [CA] To do: update with the nï¿½ of frames of the track you created
 					nk_layout_row_static(context, 25, 200, 1);
 					nk_label(context, "Edit track slopes", NK_TEXT_CENTERED);
 					nk_layout_row_static(context, 25, 200, 1);
@@ -335,7 +343,7 @@ void Lab3::ImGui(nk_context* context) {
 
 					clip[24].getRotationTrack().setInterpolation(Interpolation::Cubic);
 					
-					const char* frameIndex2[] = { "1", "2", "3"}; // [CA] To do: update with the nº of frames of the track you created
+					const char* frameIndex2[] = { "1", "2", "3"}; // [CA] To do: update with the nï¿½ of frames of the track you created
 					nk_layout_row_static(context, 25, 200, 1);
 					nk_label(context, "Edit track slopes", NK_TEXT_CENTERED);
 					nk_layout_row_static(context, 25, 200, 1);

@@ -1,29 +1,3 @@
-﻿  lab3.cpp
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\minwindef.h(130,1): warning C4005: 'APIENTRY': redefinición de macro
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\Dependencies\GLFW\include\GLFW\glfw3.h(123): message : vea la definición anterior de 'APIENTRY'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(64,51): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(262,32): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(263,32): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(266,28): warning C4244: '+=': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(267,28): warning C4244: '-=': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(268,31): warning C4244: '+=': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(269,31): warning C4244: '-=': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(301,88): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(302,88): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(303,88): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(306,90): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(307,90): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(308,90): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(327,110): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(328,110): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(329,110): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(332,112): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(333,112): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(334,112): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(346,110): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(347,110): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(348,110): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(351,112): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(352,112): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab3.cpp(353,112): warning C4305: 'argumento': truncamiento de 'double' a 'float'
+﻿  labSelector.cpp
+C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\ComputerAnimation\src\lab1.h(11,10): warning C4067: símbolos (token) inesperados después de la directiva del preprocesador; se esperaba una nueva línea
   ComputerAnimation.vcxproj -> C:\Users\Usuario\Desktop\upf\5y\2trim\IS\ComputerAnimation\x64\Debug\ComputerAnimation.exe

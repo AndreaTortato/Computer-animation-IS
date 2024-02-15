@@ -65,6 +65,48 @@ void DebugDraw::push(const vec3& v) {
 	mPoints.push_back(v);
 }
 
+void DebugDraw::fromPose(Pose& pose) {
+	unsigned int requiredVerts = 0;
+	unsigned int numJoints = pose.size();
+	for (unsigned int i = 0; i < numJoints; ++i) {
+		if (pose.getParent(i) < 0) {
+			continue;
+		}
+
+		requiredVerts += 2;
+	}
+
+	mPoints.resize(requiredVerts);
+	for (unsigned int i = 0; i < numJoints; ++i) {
+		if (pose.getParent(i) < 0) {
+			continue;
+		}
+
+		mPoints.push_back(pose.getGlobalTransform(i).position);
+		mPoints.push_back(pose.getGlobalTransform(pose.getParent(i)).position);
+	}
+}
+
+void DebugDraw::linesFromIKSolver(IKSolver& solver) {
+	if (solver.size() < 2) { return; }
+	unsigned int requiredVerts = (solver.size() - 1) * 2;
+	mPoints.resize(requiredVerts);
+
+	unsigned int index = 0;
+	for (unsigned int i = 0, size = solver.size(); i < size - 1; ++i) {
+		mPoints[index++] = solver.getGlobalTransform(i).position;
+		mPoints[index++] = solver.getGlobalTransform(i + 1).position;
+	}
+}
+
+void DebugDraw::pointsFromIKSolver(IKSolver& solver) {
+	unsigned int requiredVerts = solver.size();
+	mPoints.resize(requiredVerts);
+
+	for (unsigned int i = 0, size = solver.size(); i < size; ++i) {
+		mPoints[i] = solver.getGlobalTransform(i).position;
+	}
+}
 
 void DebugDraw::updateOpenGLBuffers() {
 	mAttribs->Set(mPoints);
@@ -92,26 +134,4 @@ void DebugDraw::draw(DebugDrawMode mode, const vec3& color, const mat4& mvp) {
 	}
 	mAttribs->UnBindFrom(mShader->GetAttribute("position"));
 	mShader->UnBind();
-}
-
-void DebugDraw::fromPose(Pose& pose) {
-	unsigned int requiredVerts = 0;
-	unsigned int numJoints = pose.size();
-	for (unsigned int i = 0; i < numJoints; ++i) {
-		if (pose.getParent(i) < 0) {
-			continue;
-		}
-
-		requiredVerts += 2;
-	}
-
-	mPoints.resize(requiredVerts);
-	for (unsigned int i = 0; i < numJoints; ++i) {
-		if (pose.getParent(i) < 0) {
-			continue;
-		}
-
-		mPoints.push_back(pose.getGlobalTransform(i).position);
-		mPoints.push_back(pose.getGlobalTransform(pose.getParent(i)).position);
-	}
 }

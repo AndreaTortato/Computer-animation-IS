@@ -134,7 +134,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\animation\blending.cpp" />
+    <ClCompile Include="src\animation\CCDSolver.cpp" />
     <ClCompile Include="src\animation\clip.cpp" />
+    <ClCompile Include="src\animation\FABRIKSolver.cpp" />
+    <ClCompile Include="src\animation\IKsolver.cpp" />
     <ClCompile Include="src\animation\track.cpp" />
     <ClCompile Include="src\animation\transformTrack.cpp" />
     <ClCompile Include="src\camera.cpp" />
@@ -143,6 +146,7 @@
     <ClCompile Include="src\lab1.cpp" />
     <ClCompile Include="src\lab2.cpp" />
     <ClCompile Include="src\lab3.cpp" />
+    <ClCompile Include="src\lab4.cpp" />
     <ClCompile Include="src\loaders\gLTFLoader.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\math\mat4.cpp" />
@@ -163,19 +167,24 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\animation\blending.h" />
+    <ClInclude Include="src\animation\CCDSolver.h" />
     <ClInclude Include="src\animation\clip.h" />
+    <ClInclude Include="src\animation\FABRIKSolver.h" />
     <ClInclude Include="src\animation\frame.h" />
+    <ClInclude Include="src\animation\IKSolver.h" />
     <ClInclude Include="src\animation\track.h" />
     <ClInclude Include="src\animation\transformTrack.h" />
     <ClInclude Include="src\application.h" />
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\external\cgltf.h" />
     <ClInclude Include="src\external\nuklear.h" />
+    <ClInclude Include="src\external\nuklear_glfw_gl3.h" />
     <ClInclude Include="src\external\nuklear_glfw_gl4.h" />
     <ClInclude Include="src\external\stb_image.h" />
     <ClInclude Include="src\lab1.h" />
     <ClInclude Include="src\lab2.h" />
     <ClInclude Include="src\lab3.h" />
+    <ClInclude Include="src\lab4.h" />
     <ClInclude Include="src\loaders\gLTFLoader.h" />
     <ClInclude Include="src\math\mat4.h" />
     <ClInclude Include="src\math\quat.h" />
