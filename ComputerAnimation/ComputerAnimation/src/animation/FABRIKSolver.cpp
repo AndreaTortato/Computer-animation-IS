@@ -1,8 +1,10 @@
 #include "FABRIKSolver.h"
+#include <iostream>
 
 void FABRIKSolver::resize(unsigned int newSize) {
 	// [CA] To do: Resize all arrays
-	
+	worldChain.resize(newSize);
+	lengths.resize(newSize);
 }
 
 // Converts the chain from local joints transforms to global transforms
@@ -41,22 +43,36 @@ void FABRIKSolver::worldToIKChain() {
 	}
 }
 
-void FABRIKSolver::iterateBackward(const vec3 & goal) {
+void FABRIKSolver::iterateBackward(const vec3& goal) {
 	// [CA] To do:
 	// Set the end-effector to the goal location
+	worldChain.back() = goal;
 
 	// For each joint in the chain (reversed) starting from end-effector - 1:
-		// 1. Reposition the joint using the direction (unitary vector) to the next joint takio
+	for (int i = worldChain.size() - 2; i >= 0; --i)
+	{
+		//std::cout << "size: " << worldChain.size() << ", joint: " << i << std::endl;
 
+		// 1. Reposition the joint using the direction (unitary vector) to the next joint
+		vec3 direction = worldChain[i + 1] - worldChain[i];
+		normalize(direction);
+		worldChain[i] = worldChain[i + 1] - direction * lengths[i];
+	}
 }
 
 void FABRIKSolver::iterateForward(const vec3& base) {
 	// [CA] To do:
 	// Set the first joint (origin) of the chain to the origin location
+	worldChain[0] = base;
 
 	// For each joint in the chain starting from 1:
+	for (unsigned int i = 1; i < worldChain.size(); ++i)
+	{
 		// 1. Reposition the joint using the direction (unitary vector) to the previous joint
-	
+		vec3 direction = worldChain[i - 1] - worldChain[i];
+		normalize(direction);
+		worldChain[i] = worldChain[i - 1] - direction * lengths[i];
+	}
 }
 
 bool FABRIKSolver::solve(const Transform& target) {
@@ -72,15 +88,30 @@ bool FABRIKSolver::solve(const Transform& target) {
 
 	// [CA] To do: 
 	// For each iteration of the algorithm:
+	for (int iter = 0; iter < numSteps; ++iter)
+	{
 		// 1. Check if the end-effector has reached the goal
+		vec3 dist = worldChain.back() - goal;
+		if (lenSq(dist) < thresholdSq) return true;
+		
 		// 2. Perform backward step
-		// 3. Perform forward step
-		// 4. Apply constraints if required:
-		//		4.1. Convert the chain in local space
-		//		4.2. Apply constraints
-		//		4.3. Convert the chain in global space again
-	// Convert the chain in local space again
-	// Last check if end-effector has reached the goal
+		iterateBackward(goal);
 
+		// 3. Perform forward step
+		iterateForward(base);
+
+		// 4. Apply constraints if required:
+		//		4.1. Convert the chain in local space	
+		//		4.2. Apply constraints	
+		//		4.3. Convert the chain in global space again
+	
+	}
+	// Convert the chain in local space again
+	worldToIKChain();
+
+	// Last check if end-effector has reached the goal
+	vec3 dist = worldChain.back() - goal;
+	if (lenSq(dist) < thresholdSq) return true;
+	
 	return false;
 }

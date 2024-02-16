@@ -9,8 +9,8 @@
 #include "shading/texture.h"
 #include "animation/pose.h"
 
-#include "animation/ikSolver.h"
-#include "animation/CCDSolver.h"
+#include "animation/IKSolver.h"
+#include "animation/CDDSolver.h"
 #include "animation/FABRIKSolver.h"
 
 class Lab4 : public Application {
@@ -48,13 +48,13 @@ protected:
 	enum solvers { CCD, FABRIK };
 	static const char* solvers[];
 	int currentSolver;
-	
+
 	IKSolver* currSolver;
 	CCDSolver CCDSolver;
 	FABRIKSolver FABRIKSolver;
 
 	Transform target;
-	
+
 	AnimationInstance IKInfo;
 	DebugDraw* CCDchainLines;
 	DebugDraw* CCDchainPoints;
@@ -64,7 +64,7 @@ protected:
 
 public:
 	void init();
-	
+
 	void createChain();
 	void createChainFromCharacter();
 
@@ -84,3 +84,4 @@ public:
 	void onMiddleMouseButtonUp();
 	void onScroll(double xOffset, double yOffset);
 };
+

@@ -1,4 +1,4 @@
-#include "ikSolver.h"
+#include "IKSolver.h"
 
 IKSolver::IKSolver() {
 	numSteps = 15;

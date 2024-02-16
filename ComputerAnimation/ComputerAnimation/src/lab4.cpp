@@ -91,7 +91,7 @@ void Lab4::createChain() {
 	//TASK 1 & TASK 2
 	// [CA] To do: Create a chain in local space and assign it to CCD and FABRIK solvers
 	float segmentLength = 1.0f;
-	int numJoints = 3; 
+	int numJoints = 3;
 	std::vector<Transform> chain;
 
 	for (int i = 0; i < numJoints; ++i) {
@@ -107,13 +107,17 @@ void Lab4::createChain() {
 	}
 
 	// Set the created chain to the CCD solve
-	setChain(chain);
+	CCDSolver.setChain(chain);
+	FABRIKSolver.setChain(chain);
 
 	// Set an initial position to the target (for example, at the end of the chain)
 	target.position = chain.back().position + vec3(1.0f, 0.0f, 0.0f);
-
+	
 	// Solve the inverse kinematics problem using the CCD solver
-	solve(target);
+	CCDSolver.solve(target);
+	//target.position.x += 5;
+	FABRIKSolver.solve(target);
+	//target.position.x -= 5;
 }
 
 void Lab4::createChainFromCharacter() {
@@ -135,7 +139,7 @@ void Lab4::render(float inAspectRatio) {
 	mat4 view_projection = camera->getViewProjectionMatrix();
 	mat4 model_aux = transformToMat4(objectTransform);
 	mat4 model = transformToMat4(IKInfo.model);
-	
+
 	// Target gizmo visualization (for CCD chain and Character chain)
 	(*targetVisual[0])[0] = target.position + vec3(GIZMO_SIZE, 0, 0);
 	(*targetVisual[1])[0] = target.position + vec3(0, GIZMO_SIZE, 0);
@@ -153,66 +157,70 @@ void Lab4::render(float inAspectRatio) {
 
 
 	switch (currentTask) {
-		case TASK1: 
-			// [CA] To do: Draw the chains using DebugDraw instances:
-			
-			//Draw CCD solver chain using linesFromIKSolver
-			std::vector<vec3> ccdJoints = pointsFromIKSolver(currSolver);
-			std::vector<std::pair<vec3, vec3>> ccdBones = linesFromIKSolver(ccdSolver);
-			//1. Push joints to opengl (joints)
-			ccdJoints->set(ccdJoints);
-			//2. Push bones to opengl (bones)
-			ccdBones->set(ccdBones);
-			//3. Update open gl buffers
-			ccdJoints->updateOpenGLBuffers();
-			ccdBones->updateOpenGLBuffers();
-			//4. Draw points and lines
-			ccdJoints->draw(DebugDrawMode::Points, vec3(1.0f, 0.0f, 0.0f), view_projection * model);
-			ccdBones->draw(DebugDrawMode::Lines, vec3(1.0f, 1.0f, 1.0f), view_projection * model);
+	case TASK1:
+		// [CA] To do: Draw the chains using DebugDraw instances:
+
+		//Draw CCD solver chain using linesFromIKSolver
+		//1. Push joints to opengl (joints)
+		CCDchainLines->linesFromIKSolver(CCDSolver);
+		//2. Push bones to opengl (bones)
+		CCDchainPoints->pointsFromIKSolver(CCDSolver);
+		//3. Update open gl buffers
+		CCDchainLines->updateOpenGLBuffers();
+		CCDchainPoints->updateOpenGLBuffers();
+		//4. Draw points and lines
+		CCDchainLines->draw(DebugDrawMode::Lines, vec3(0, 1, 1), view_projection);
+		CCDchainPoints->draw(DebugDrawMode::Points, vec3(0, 1, 1), view_projection);
 
 
-			//Draw FABRIK solver chain
-			//1. Push joints to opengl (joints)
-			//2. Push bones to opengl (bones)
-			//3. Update open gl buffers
-			//4. Draw points and lines
-			 
-			
-			// FABRIK chain target visualization
-			targetVisual[0]->draw(DebugDrawMode::Lines, vec3(1, 0, 0), view_projection*model_aux);
-			targetVisual[1]->draw(DebugDrawMode::Lines, vec3(0, 1, 0), view_projection*model_aux);
-			targetVisual[2]->draw(DebugDrawMode::Lines, vec3(0, 0, 1), view_projection*model_aux);
-			break;
+		//Draw FABRIK solver chain
+		//1. Push joints to opengl (joints)
+		FABRIKchainLines->linesFromIKSolver(FABRIKSolver);
+		//2. Push bones to opengl (bones)
+		FABRIKchainPoints->pointsFromIKSolver(FABRIKSolver);
+		//3. Update open gl buffers
+		FABRIKchainLines->updateOpenGLBuffers();
+		FABRIKchainPoints->updateOpenGLBuffers();
+		//4. Draw points and lines
+		FABRIKchainLines->draw(DebugDrawMode::Lines, vec3(1, 0, 1), view_projection);
+		FABRIKchainPoints->draw(DebugDrawMode::Points, vec3(1, 0, 1), view_projection);
 
-		case TASK2:
-		{
-			// GPU Skinned Mesh
-			shader->Bind();
-			Uniform<mat4>::Set(shader->GetUniform("model"), model);
-			Uniform<mat4>::Set(shader->GetUniform("view_projection"), view_projection);
-			Uniform<vec3>::Set(shader->GetUniform("light"), vec3(1, 1, 1));
 
-			std::vector<mat4> poseMatrices = IKInfo.animatedPose.getGlobalMatrices();
-			Uniform<mat4>::Set(shader->GetUniform("pose"), poseMatrices);
-			Uniform<mat4>::Set(shader->GetUniform("invBindPose"), skeleton.getInvBindPose());
+		// FABRIK chain target visualization
+		targetVisual[0]->draw(DebugDrawMode::Lines, vec3(1, 0, 0), view_projection * model_aux);
+		targetVisual[1]->draw(DebugDrawMode::Lines, vec3(0, 1, 0), view_projection * model_aux);
+		targetVisual[2]->draw(DebugDrawMode::Lines, vec3(0, 0, 1), view_projection * model_aux);
+		break;
 
-			tex->Set(shader->GetUniform("tex0"), 0);
-			for (unsigned int i = 0, size = (unsigned int)meshes.size(); i < size; ++i) {
-				meshes[i].bind(shader->GetAttribute("position"), shader->GetAttribute("normal"), shader->GetAttribute("texCoord"), shader->GetAttribute("weights"), shader->GetAttribute("joints"));
-				meshes[i].draw();
-				meshes[i].unBind(shader->GetAttribute("position"), shader->GetAttribute("normal"), shader->GetAttribute("texCoord"), shader->GetAttribute("weights"), shader->GetAttribute("joints"));
-			}
-			tex->UnSet(0);
-			shader->UnBind();
+	case TASK2:
+	{
+		// GPU Skinned Mesh
+		shader->Bind();
+		Uniform<mat4>::Set(shader->GetUniform("model"), model);
+		Uniform<mat4>::Set(shader->GetUniform("view_projection"), view_projection);
+		Uniform<vec3>::Set(shader->GetUniform("light"), vec3(1, 1, 1));
 
-			if (showSkeleton) {
-				glDisable(GL_DEPTH_TEST);
-				poseHelper->updateOpenGLBuffers();
-				poseHelper->draw(DebugDrawMode::Lines, vec3(0, 1, 1), view_projection * model);
-				glEnable(GL_DEPTH_TEST);
-			}
-			break;
+		std::vector<mat4> poseMatrices = IKInfo.animatedPose.getGlobalMatrices();
+		Uniform<mat4>::Set(shader->GetUniform("pose"), poseMatrices);
+		Uniform<mat4>::Set(shader->GetUniform("invBindPose"), skeleton.getInvBindPose());
+
+		tex->Set(shader->GetUniform("tex0"), 0);
+		for (unsigned int i = 0, size = (unsigned int)meshes.size(); i < size; ++i) {
+			meshes[i].bind(shader->GetAttribute("position"), shader->GetAttribute("normal"), shader->GetAttribute("texCoord"), shader->GetAttribute("weights"), shader->GetAttribute("joints"));
+			meshes[i].draw();
+			meshes[i].unBind(shader->GetAttribute("position"), shader->GetAttribute("normal"), shader->GetAttribute("texCoord"), shader->GetAttribute("weights"), shader->GetAttribute("joints"));
 		}
+		tex->UnSet(0);
+		shader->UnBind();
+
+		if (showSkeleton) {
+			glDisable(GL_DEPTH_TEST);
+			poseHelper->updateOpenGLBuffers();
+			poseHelper->draw(DebugDrawMode::Lines, vec3(0, 1, 1), view_projection * model);
+			glEnable(GL_DEPTH_TEST);
+		}
+		break;
+	}
 	}
 
 	if (showAxes) {
@@ -220,39 +228,44 @@ void Lab4::render(float inAspectRatio) {
 		mRightAxis->draw(DebugDrawMode::Lines, vec3(1, 0, 0), view_projection);
 		mForwardAxis->draw(DebugDrawMode::Lines, vec3(0, 0, 1), view_projection);
 	}
-	
+
 }
 
 void Lab4::update(float inDeltaTime) {
-	
+
 
 	switch (currentTask) {
-		case TASK1:
-			// [CA] To do:
-			// Solve CCD and FABRIK IK for both chains
-			//..
+	case TASK1:
+		// [CA] To do:
+		// Solve CCD and FABRIK IK for both chains
+		
+		CCDSolver.solve(target);
+		//target.position.x += 5;
+		FABRIKSolver.solve(target);
+		//target.position.x -= 5;
+
 		break;
-		case TASK2:
-		{
-			// [CA] To do:
-			// Solve IK for character chain depending of the selected solver type
-			//..
-			
-			// Update skeleton and current pose with the IK chain transforms
-			// 1. Get origin joint in local space: Combine the inverse global transformation of its parent with its computed IK transformation
-			//..
-			// 2. Set the local transformation of the origin joint to the current pose
-			//..
-			// 3. For the rest of the chain, set the local transformation of each joint into the corresponding current pose joint
-			//.. 
-			// Update the global matrices of the struct animaiton
-			IKInfo.posePalette = IKInfo.animatedPose.getGlobalMatrices();
-			// Update the poseHelper visualization with the current pose
-			poseHelper->fromPose(IKInfo.animatedPose);
-			break;
-		}
-		default:
-			break;
+	case TASK2:
+	{
+		// [CA] To do:
+		// Solve IK for character chain depending of the selected solver type
+		//..
+
+		// Update skeleton and current pose with the IK chain transforms
+		// 1. Get origin joint in local space: Combine the inverse global transformation of its parent with its computed IK transformation
+		//..
+		// 2. Set the local transformation of the origin joint to the current pose
+		//..
+		// 3. For the rest of the chain, set the local transformation of each joint into the corresponding current pose joint
+		//.. 
+		// Update the global matrices of the struct animaiton
+		IKInfo.posePalette = IKInfo.animatedPose.getGlobalMatrices();
+		// Update the poseHelper visualization with the current pose
+		poseHelper->fromPose(IKInfo.animatedPose);
+		break;
+	}
+	default:
+		break;
 	}
 
 	// mouse update
@@ -276,19 +289,19 @@ void Lab4::ImGui(nk_context* context) {
 	if (nk_begin(context, "Lab 4 Controls", nk_rect(5.0f, 70.0f, 300.0f, 300.0f), NK_WINDOW_MINIMIZABLE | NK_WINDOW_MOVABLE)) {
 		nk_layout_row_static(context, 25, 200, 1);
 		nk_checkbox_label(context, "Show axes", &showAxes);
-		
+
 		int task = nk_combo(context, tasks, NK_LEN(tasks), currentTask, 25, nk_vec2(200, 200));
 		if (task != currentTask) {
 			currentTask = task;
 			switch (currentTask) {
-				case TASK1:
-					// Create CCD & FABRIK chains 
-					createChain();
-					break;
-				case TASK2:
-					// Create IK chain from a character
-					createChainFromCharacter();
-					break;
+			case TASK1:
+				// Create CCD & FABRIK chains 
+				createChain();
+				break;
+			case TASK2:
+				// Create IK chain from a character
+				createChainFromCharacter();
+				break;
 			}
 		}
 		if (currentTask == TASK2) {
@@ -302,7 +315,7 @@ void Lab4::ImGui(nk_context* context) {
 				//..
 			}
 		}
-		
+
 		nk_layout_row_static(context, 25, 200, 1);
 
 		nk_label(context, "Target", NK_TEXT_CENTERED);

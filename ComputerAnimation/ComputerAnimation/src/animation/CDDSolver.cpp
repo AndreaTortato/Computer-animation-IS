@@ -1,4 +1,4 @@
-#include "CCDSolver.h"
+#include "CDDSolver.h"
 
 bool CCDSolver::solve(const Transform& target) {
 	// Local variables and chainSize check
@@ -17,21 +17,21 @@ bool CCDSolver::solve(const Transform& target) {
 		if (lenSq(dist) < thresholdSq)	return true;
 
 		// 2. For each joint in the chain (reversed) starting from end-effector - 1:
-		for (int j = last - 1; j >= 0; --j)
+		for (int j = last - 1; j >= 0; --j) // j >= 1 last joint orientates
 		{
 			// 2.1. Find a vector from current joint to end effector
-			vec3 jointToEndEffector = ikChain[last].position - ikChain[j].position;
+			vec3 jointToEndEffector = ikChain[j].position - ikChain[last].position;
 			normalize(jointToEndEffector);
 
 			// 2.2. Find a vector from the current joint to the goal
-			vec3 jointToGoal = goal - ikChain[j].position;
+			vec3 jointToGoal = ikChain[j].position - goal;
 			normalize(jointToGoal);
 
 			// 2.3. Find the rotation between these two directions
-			quat rotation = lookRotation(jointToEndEffector, jointToGoal);
+			quat rotation = fromTo(jointToEndEffector, jointToGoal);
 
 			// 2.4. Rotate the joint so the joint to effector vector matches the orientation of the joint to goal vector
-			ikChain[j].rotation = rotation * ikChain[j].rotation;
+			ikChain[j].rotation = rotation;
 
 			// 2.5. Apply constraints if required (TASK 4)
 

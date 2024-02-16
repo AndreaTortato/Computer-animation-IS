@@ -6,7 +6,7 @@
 #include "../math/vec3.h"
 #include "../math/mat4.h"
 #include "../animation/pose.h"
-#include "../animation/ikSolver.h"
+#include "../animation/IKSolver.h"
 
 enum class DebugDrawMode {
 	Lines, Loop, Strip, Points, Triangles
