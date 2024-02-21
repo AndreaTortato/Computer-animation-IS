@@ -111,21 +111,33 @@ void Lab4::createChain() {
 	FABRIKSolver.setChain(chain);
 
 	// Set an initial position to the target (for example, at the end of the chain)
-	target.position = chain.back().position + vec3(1.0f, 0.0f, 0.0f);
+	target.position = chain.back().position;
 	
 	// Solve the inverse kinematics problem using the CCD solver
 	CCDSolver.solve(target);
-	//target.position.x += 5;
 	FABRIKSolver.solve(target);
-	//target.position.x -= 5;
 }
 
 void Lab4::createChainFromCharacter() {
 	//TASK 3
 	// [CA] To do: Create a chain using joints of the character and assign it to CCD and FABRIK solvers (the origin joint of the chain has to be in global space)
-	//..
+	
+	std::vector<Transform> chain;
+
+	for (int i = 0; i <= charachterjoint; ++i) 
+	{
+		Transform localTransform = skeleton.getRestPose().getLocalTransform(i);
+		chain.push_back(localTransform);
+	}
+	
+	CCDSolver.setChain(chain);
+	FABRIKSolver.setChain(chain);
+	
 	// Set the target to the global position of the last joint of the chain
-	//..
+	target.position = chain.back().position;
+	
+	CCDSolver.solve(target);
+	FABRIKSolver.solve(target);
 }
 
 void Lab4::render(float inAspectRatio) {
@@ -216,7 +228,16 @@ void Lab4::render(float inAspectRatio) {
 		if (showSkeleton) {
 			glDisable(GL_DEPTH_TEST);
 			poseHelper->updateOpenGLBuffers();
-			poseHelper->draw(DebugDrawMode::Lines, vec3(0, 1, 1), view_projection * model);
+			if (currentSolver == 0)
+			{
+				poseHelper->draw(DebugDrawMode::Lines, vec3(0, 1, 1), view_projection * model);
+
+			}
+			if (currentSolver == 1)
+			{
+				poseHelper->draw(DebugDrawMode::Lines, vec3(1, 0, 1), view_projection * model);
+
+			}
 			glEnable(GL_DEPTH_TEST);
 		}
 		break;
@@ -240,26 +261,59 @@ void Lab4::update(float inDeltaTime) {
 		// Solve CCD and FABRIK IK for both chains
 		
 		CCDSolver.solve(target);
-		//target.position.x += 5;
 		FABRIKSolver.solve(target);
-		//target.position.x -= 5;
 
 		break;
 	case TASK2:
 	{
 		// [CA] To do:
 		// Solve IK for character chain depending of the selected solver type
-		//..
 
-		// Update skeleton and current pose with the IK chain transforms
-		// 1. Get origin joint in local space: Combine the inverse global transformation of its parent with its computed IK transformation
-		//..
-		// 2. Set the local transformation of the origin joint to the current pose
-		//..
-		// 3. For the rest of the chain, set the local transformation of each joint into the corresponding current pose joint
-		//.. 
+		if (currentSolver == 0)
+		{
+			CCDSolver.solve(target); 
+			int chainSize = CCDSolver.getChain().size();
+
+			// Update skeleton and current pose with the IK chain transforms
+			// 1. Get origin joint in local space: Combine the inverse global transformation of its parent with its computed IK transformation
+			Transform originLocalTransform = CCDSolver.getChain()[charachterjoint];
+
+			// 2. Set the local transformation of the origin joint to the current pose
+			IKInfo.animatedPose.setLocalTransform(charachterjoint, originLocalTransform);
+
+			// 3. For the rest of the chain, set the local transformation of each joint into the corresponding current pose joint
+			for (int i = chainSize - 1; i >= 0; --i)
+			{
+				Transform jointLocalTransform = CCDSolver.getChain()[i];
+				IKInfo.animatedPose.setLocalTransform(i, jointLocalTransform);
+			}
+		}
+
+
+		if (currentSolver == 1)
+		{
+			FABRIKSolver.solve(target);
+			int chainSize = FABRIKSolver.getChain().size();
+
+			// Update skeleton and current pose with the IK chain transforms
+			// 1. Get origin joint in local space: Combine the inverse global transformation of its parent with its computed IK transformation
+			Transform originLocalTransform = FABRIKSolver.getChain()[charachterjoint];
+
+			// 2. Set the local transformation of the origin joint to the current pose
+			IKInfo.animatedPose.setLocalTransform(charachterjoint, originLocalTransform);
+
+			// 3. For the rest of the chain, set the local transformation of each joint into the corresponding current pose joint
+			for (int i = chainSize - 1; i >= 0; --i)
+			{
+				Transform jointLocalTransform = FABRIKSolver.getChain()[i];
+				IKInfo.animatedPose.setLocalTransform(i, jointLocalTransform);
+			}
+		}
+		
+		
 		// Update the global matrices of the struct animaiton
 		IKInfo.posePalette = IKInfo.animatedPose.getGlobalMatrices();
+		
 		// Update the poseHelper visualization with the current pose
 		poseHelper->fromPose(IKInfo.animatedPose);
 		break;
@@ -313,6 +367,7 @@ void Lab4::ImGui(nk_context* context) {
 				currentSolver = solver;
 				// [CA] To do: Change the current solver for the character IK chain
 				//..
+
 			}
 		}
 

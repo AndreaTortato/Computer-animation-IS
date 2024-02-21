@@ -14,18 +14,16 @@ bool CCDSolver::solve(const Transform& target) {
 	{
 		// 1. Check if the end-effector has reached the goal (using the lenSq)
 		vec3 dist = ikChain[last].position - goal;
-		if (lenSq(dist) < thresholdSq)	return true;
+		if (lenSq(dist) < thresholdSq) return true;
 
 		// 2. For each joint in the chain (reversed) starting from end-effector - 1:
 		for (int j = last - 1; j >= 0; --j) // j >= 1 last joint orientates
 		{
 			// 2.1. Find a vector from current joint to end effector
-			vec3 jointToEndEffector = ikChain[j].position - ikChain[last].position;
-			normalize(jointToEndEffector);
+			vec3 jointToEndEffector = ikChain[last].position - ikChain[j].position;
 
 			// 2.2. Find a vector from the current joint to the goal
-			vec3 jointToGoal = ikChain[j].position - goal;
-			normalize(jointToGoal);
+			vec3 jointToGoal = goal - ikChain[j].position;
 
 			// 2.3. Find the rotation between these two directions
 			quat rotation = fromTo(jointToEndEffector, jointToGoal);
@@ -37,7 +35,7 @@ bool CCDSolver::solve(const Transform& target) {
 
 			// 2.6. Check if the end-effector has reached the goal
 			vec3 dist = ikChain[last].position - goal;
-			if (lenSq(dist) < thresholdSq)	return true;
+			if (lenSq(dist) < thresholdSq) return true;
 		}
 	}
 
