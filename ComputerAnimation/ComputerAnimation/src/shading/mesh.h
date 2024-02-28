@@ -7,6 +7,7 @@
 #include "../shading/attribute.h"
 #include "../animation/skeleton.h"
 #include "../animation/pose.h"
+#include "indexBuffer.h"
 
 class Mesh
 {
@@ -30,6 +31,8 @@ protected:
 	Attribute<vec2>* uvAttrib;
 	Attribute<vec4>* weightAttrib;
 	Attribute<ivec4>* influenceAttrib;
+
+	IndexBuffer* indexBuffer;
 
 
 public:

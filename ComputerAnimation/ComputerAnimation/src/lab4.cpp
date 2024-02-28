@@ -124,7 +124,7 @@ void Lab4::createChainFromCharacter() {
 	
 	std::vector<Transform> chain;
 
-	for (int i = 0; i <= charachterjoint; ++i) 
+	for (int i = 0; i <= charachterjoint; ++i)
 	{
 		Transform localTransform = skeleton.getRestPose().getLocalTransform(i);
 		chain.push_back(localTransform);
@@ -276,10 +276,10 @@ void Lab4::update(float inDeltaTime) {
 
 			// Update skeleton and current pose with the IK chain transforms
 			// 1. Get origin joint in local space: Combine the inverse global transformation of its parent with its computed IK transformation
-			Transform originLocalTransform = CCDSolver.getChain()[charachterjoint];
+			Transform originLocalTransform = CCDSolver.getChain()[0];
 
 			// 2. Set the local transformation of the origin joint to the current pose
-			IKInfo.animatedPose.setLocalTransform(charachterjoint, originLocalTransform);
+			IKInfo.animatedPose.setLocalTransform(0, originLocalTransform);
 
 			// 3. For the rest of the chain, set the local transformation of each joint into the corresponding current pose joint
 			for (int i = chainSize - 1; i >= 0; --i)
@@ -287,6 +287,7 @@ void Lab4::update(float inDeltaTime) {
 				Transform jointLocalTransform = CCDSolver.getChain()[i];
 				IKInfo.animatedPose.setLocalTransform(i, jointLocalTransform);
 			}
+
 		}
 
 
@@ -297,10 +298,10 @@ void Lab4::update(float inDeltaTime) {
 
 			// Update skeleton and current pose with the IK chain transforms
 			// 1. Get origin joint in local space: Combine the inverse global transformation of its parent with its computed IK transformation
-			Transform originLocalTransform = FABRIKSolver.getChain()[charachterjoint];
+			Transform originLocalTransform = FABRIKSolver.getChain()[0];
 
 			// 2. Set the local transformation of the origin joint to the current pose
-			IKInfo.animatedPose.setLocalTransform(charachterjoint, originLocalTransform);
+			IKInfo.animatedPose.setLocalTransform(0, originLocalTransform);
 
 			// 3. For the rest of the chain, set the local transformation of each joint into the corresponding current pose joint
 			for (int i = chainSize - 1; i >= 0; --i)
@@ -309,7 +310,6 @@ void Lab4::update(float inDeltaTime) {
 				IKInfo.animatedPose.setLocalTransform(i, jointLocalTransform);
 			}
 		}
-		
 		
 		// Update the global matrices of the struct animaiton
 		IKInfo.posePalette = IKInfo.animatedPose.getGlobalMatrices();

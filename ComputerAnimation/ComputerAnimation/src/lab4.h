@@ -48,7 +48,7 @@ protected:
 	enum solvers { CCD, FABRIK };
 	static const char* solvers[];
 	int currentSolver;
-	int charachterjoint = 30;
+	int charachterjoint = 20;
 
 	IKSolver* currSolver;
 	CCDSolver CCDSolver;
