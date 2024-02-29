@@ -35,15 +35,17 @@ void Retargeting::automap() {
 	renameAnimationBones(sourceNames);
 	renameAnimationBones(targetNames);
 
-	map.resize(sourceNames.size(), -1); // Initialize map with -1
+	map.resize(sourceNames.size());
 
-	for (size_t i = 0; i < sourceNames.size(); ++i) {
-		auto it = std::find(targetNames.begin(), targetNames.end(), sourceNames[i]);
-		if (it != targetNames.end()) {
-
-			size_t index = std::distance(targetNames.begin(), it);
-			map[i] = static_cast<int>(index);
-		}
+	for (int i = 0; i < sourceNames.size(); ++i) 
+	{
+		for (int j = 0; j < targetNames.size(); ++j)
+		{
+			if (targetNames[j] == sourceNames[i])
+			{
+				map[i] = j;
+			}
+		}	
 	}
 }
 
@@ -142,32 +144,40 @@ void Retargeting::fixBindPose() {
 
 void Retargeting::solve(Pose& targetPose) {
 
+	//automap();
 	if (!map.size()) return;
 
 	for (unsigned int sourceId = 0; sourceId < source.getBindPose().size(); sourceId++) {
 		int targetId = map[sourceId];
-		if (targetId < 0) continue;
+
+		if (targetId <= 0) continue;
 
 		std::string name = source.getJointName(sourceId);
+		std::string Tname = target.getJointName(targetId);
+		// std::cout << name << ", " << Tname << std::endl; //mapping in correct, for now the math below is the problem
+
 		Transform srcWorldBindPose = source.getBindPose().getGlobalTransform(sourceId);
 		Transform tgtWorldBindPose = target.getBindPose().getGlobalTransform(targetId);
 		Transform localRetarget = target.getBindPose().getLocalTransform(targetId);
 
-		// Find Bind Rotation Difference from Source to Target
+		// 1. Find Bind Rotation Difference from Source to Target
 		quat srcRot = srcWorldBindPose.rotation;
 		quat tgtRot = tgtWorldBindPose.rotation;
-		quat rotationDifference = conjugate(tgtRot) * srcRot; 
+		quat rotationDifference = srcRot * inverse(tgtRot);
 
-		// Isolate the animated bone rotation by using Source parent's world bind rotation and Animated (current) local space rotation
+		// 2. Isolate the animated bone rotation by using Source parent's world bind rotation and Animated (current) local space rotation
 		int sourceParentId = source.getBindPose().getParent(sourceId);
-		Transform srcParentWorld = source.getBindPose().getGlobalTransform(sourceParentId);
-		Transform srcLocalAnimated = currentSourcePose->getLocalTransform(sourceId);
-		quat animatedBoneRot = conjugate(srcParentWorld.rotation) * rotationDifference * srcParentWorld.rotation; 
+		quat srcParentWorld = source.getBindPose().getGlobalTransform(sourceParentId).rotation;
+		quat srcLocalAnimated = currentSourcePose->getLocalTransform(sourceId).rotation;
+		quat animatedBoneRot = inverse(srcParentWorld) * srcLocalAnimated;
 
-		// Convert down the computed bone rotation to Target local space by using Target parent world bone
+		//3. Apply the bind rotation difference
+		animatedBoneRot = animatedBoneRot * rotationDifference;
+
+		// 4. Convert down the computed bone rotation to Target local space by using Target parent world bone
 		int targetParentId = target.getBindPose().getParent(targetId);
-		Transform tgtParentWorld = target.getBindPose().getGlobalTransform(targetParentId);
-		quat targetLocalRot = conjugate(tgtParentWorld.rotation) * animatedBoneRot * tgtParentWorld.rotation;
+		quat tgtParentWorld = target.getBindPose().getGlobalTransform(targetParentId).rotation;
+		quat targetLocalRot = tgtParentWorld * inverse(animatedBoneRot);
 
 		// Apply the new rotation to the retargeted local transform
 		localRetarget.rotation = targetLocalRot;
@@ -184,13 +194,13 @@ void Retargeting::solve(Pose& targetPose) {
 			srcBindPos.z = srcBindPos.z == 0.0 ? 1.0 : srcBindPos.z;
 
 			// Compute new hips position
-			vec3 newHipsPos = tgtBindPos + (srcCurrPos - srcBindPos);
+			vec3 newHipsPos = srcCurrPos - srcCurrPos;
 
 			// Convert it from global to local space
-			newHipsPos = conjugate(tgtParentWorld.rotation) * (newHipsPos - tgtParentWorld.position);
+			newHipsPos = tgtBindPos + newHipsPos;
 
 			// Apply the new position to the retargeted local transform
-			localRetarget.position = newHipsPos;
+			//localRetarget.position = newHipsPos;
 		}
 
 		// Set the retargeted transformation to the evaluated joint of the target pose

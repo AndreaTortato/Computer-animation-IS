@@ -52,8 +52,7 @@ void LabSelector::ImGui(nk_context* context, float xPos) {
 				break;
 			case LAB4:
 				if (mCurrentLab == 0 || typeid(*mCurrentLab) != typeid(Lab4)) {
-					mCurrentLab = new Lab4();
-					mCurrentLab->init();
+					
 				}
 				break;
 			case LAB5:

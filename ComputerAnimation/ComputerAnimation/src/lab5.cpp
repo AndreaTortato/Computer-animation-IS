@@ -96,11 +96,10 @@ void Lab5::init() {
 	badTargetPose = target.skeleton.getBindPose();
 
 	// TASK 2: Instance the retargeting solver with the skeletons for TASK 2
-	//Retargeting retSolver = Retargeting(sourceGLTF.skeleton, target.skeleton, &targetPose);
-	//retargetingSolver = &retSolver; //to solve error: '&' necesita valor L
+	retargetingSolver = new Retargeting(sourceGLTF.skeleton, target.skeleton, &animationInfo.animatedPose);
 	
 	// Set current task
-	currentTask = TASK1;
+	currentTask = TASK2;
 
 	currentTime = 0.0f;
 
@@ -154,6 +153,8 @@ void Lab5::render(float inAspectRatio) {
 	}
 
 	// Target mesh
+	mat4 model_aux1;
+	model_aux1.position.x = +2;
 	if (showBindPose) {
 		poseMatrices = target.skeleton.getBindPose().getGlobalMatrices();
 	}
@@ -161,7 +162,7 @@ void Lab5::render(float inAspectRatio) {
 		poseMatrices = targetPose.getGlobalMatrices();
 	}
 
-		Uniform<mat4>::Set(shader->GetUniform("model"), target.model);
+		Uniform<mat4>::Set(shader->GetUniform("model"), model_aux1);
 		Uniform<mat4>::Set(shader->GetUniform("pose"), poseMatrices);
 		Uniform<mat4>::Set(shader->GetUniform("invBindPose"), target.skeleton.getInvBindPose());
 	if (showTarget)
@@ -174,8 +175,8 @@ void Lab5::render(float inAspectRatio) {
 	}
 
 	// BAD Target mesh
-	mat4 model_aux;
-	model_aux.position.x = -2;
+	mat4 model_aux2;
+	model_aux2.position.x = -2;
 	if(showBindPose) {
 		poseMatrices = target.skeleton.getBindPose().getGlobalMatrices();
 	}
@@ -183,7 +184,7 @@ void Lab5::render(float inAspectRatio) {
 		poseMatrices = badTargetPose.getGlobalMatrices();
 	}
 
-	Uniform<mat4>::Set(shader->GetUniform("model"), model_aux);
+	Uniform<mat4>::Set(shader->GetUniform("model"), model_aux2);
 	Uniform<mat4>::Set(shader->GetUniform("pose"), poseMatrices);
 	Uniform<mat4>::Set(shader->GetUniform("invBindPose"), target.skeleton.getInvBindPose());
 	if (showBadTarget)
@@ -210,24 +211,24 @@ void Lab5::render(float inAspectRatio) {
 		if (showBindPose) {
 			target.skeletonHelper->fromPose(target.skeleton.getBindPose());
 			target.skeletonHelper->updateOpenGLBuffers();
-			target.skeletonHelper->draw(DebugDrawMode::Lines, vec3(1, 0, 1), view_projection * target.model);
-			target.skeletonHelper->draw(DebugDrawMode::Points, vec3(1, 0, 1), view_projection * target.model);
+			target.skeletonHelper->draw(DebugDrawMode::Lines, vec3(1, 0, 1), view_projection * model_aux1);
+			target.skeletonHelper->draw(DebugDrawMode::Points, vec3(1, 0, 1), view_projection * model_aux1);
 
 			badSkeletonHelper->fromPose(target.skeleton.getBindPose());
 			badSkeletonHelper->updateOpenGLBuffers();
-			badSkeletonHelper->draw(DebugDrawMode::Lines, vec3(1, 0, 1), view_projection * model_aux);
-			badSkeletonHelper->draw(DebugDrawMode::Points, vec3(1, 0, 1), view_projection * model_aux);
+			badSkeletonHelper->draw(DebugDrawMode::Lines, vec3(1, 0, 1), view_projection * model_aux2);
+			badSkeletonHelper->draw(DebugDrawMode::Points, vec3(1, 0, 1), view_projection * model_aux2);
 		}
 		else {
 			target.skeletonHelper->fromPose(targetPose);
 			target.skeletonHelper->updateOpenGLBuffers();
-			target.skeletonHelper->draw(DebugDrawMode::Lines, vec3(0, 1, 1), view_projection * target.model);
-			target.skeletonHelper->draw(DebugDrawMode::Points, vec3(0, 1, 1), view_projection * target.model);
+			target.skeletonHelper->draw(DebugDrawMode::Lines, vec3(0, 1, 1), view_projection * model_aux1);
+			target.skeletonHelper->draw(DebugDrawMode::Points, vec3(0, 1, 1), view_projection * model_aux1);
 
 			badSkeletonHelper->fromPose(badTargetPose);
 			badSkeletonHelper->updateOpenGLBuffers();
-			badSkeletonHelper->draw(DebugDrawMode::Lines, vec3(0, 1, 1), view_projection * model_aux);
-			badSkeletonHelper->draw(DebugDrawMode::Points, vec3(0, 1, 1), view_projection * model_aux);
+			badSkeletonHelper->draw(DebugDrawMode::Lines, vec3(0, 1, 1), view_projection * model_aux2);
+			badSkeletonHelper->draw(DebugDrawMode::Points, vec3(0, 1, 1), view_projection * model_aux2);
 		}
 		glEnable(GL_DEPTH_TEST);
 	}
@@ -242,9 +243,11 @@ void Lab5::render(float inAspectRatio) {
 void Lab5::update(float inDeltaTime) {
 
 	switch (currentTask) {
+
+		targetPose = target.skeleton.getBindPose();
+
 		case TASK1:
 		{
-			targetPose = target.skeleton.getBindPose();
 
 			if (!showBindPose) {
 				// [CA] To do: Basic sample src (gLTF) clip
@@ -289,8 +292,6 @@ void Lab5::update(float inDeltaTime) {
 				retargetingSolver->solve(targetPose);
 				animationInfo.playback = target.clips[animationInfo.clip].sample(targetPose, currentTime);
 
-				animationInfo.posePalette = targetPose.getGlobalMatrices();
-
 			}
 			break;
 		}
@@ -298,8 +299,7 @@ void Lab5::update(float inDeltaTime) {
 		{
 			if (!showBindPose) {
 				// [CA] To do: Basic sample src (BVH) clip
-				animationInfo.playback = sourceBVH.clips[animationInfo.clip].sample(animationInfo.animatedPose, currentTime);
-				//bvhClip
+				animationInfo.playback = bvhClip.sample(animationInfo.animatedPose, currentTime);
 				
 				// [CA] To do: Sample the (bad) target pose without retargeting
 				animationInfo.playback = target.clips[animationInfo.clip].sample(badTargetPose, currentTime);
@@ -318,8 +318,6 @@ void Lab5::update(float inDeltaTime) {
 				// [CA] To do: Apply retargeting to the target pose
 				retargetingSolver->solve(targetPose);
 				animationInfo.playback = target.clips[animationInfo.clip].sample(targetPose, currentTime);
-
-				animationInfo.posePalette = targetPose.getGlobalMatrices();
 			}
 			break;
 		}
@@ -372,15 +370,13 @@ void Lab5::ImGui(nk_context* context) {
 				case TASK1: case TASK2:
 					animationInfo.animatedPose = sourceGLTF.skeleton.getBindPose();
 					// [CA] To do: Create the retargeting solver using the src gLTF skeleton
-					{ Retargeting rs = Retargeting(sourceGLTF.skeleton, target.skeleton, &targetPose);
-					retargetingSolver = &rs; }
+					retargetingSolver = new Retargeting(sourceGLTF.skeleton, target.skeleton, &animationInfo.animatedPose);
 					break;
 				case TASK3:
 					animationInfo.animatedPose = sourceBVH.skeleton.getBindPose();
 					animationInfo.clip = 0; // bvh only has 1 clip
 					// [CA] To do: Create the retargeting solver using the src BVH skeleton
-					{ Retargeting rs = Retargeting(sourceBVH.skeleton, target.skeleton, &targetPose);
-					retargetingSolver = &rs; }				
+					retargetingSolver = new Retargeting(sourceGLTF.skeleton, target.skeleton, &animationInfo.animatedPose);
 					break;
 			}
 		}

@@ -75,3 +75,10 @@ vec3 transformVector(const Transform& t, const vec3& v) {
 	out = t.rotation * (t.scale * v);
 	return out;
 }
+
+vec3 transformPoint(const Transform& t, const vec3& b) {
+	vec3 out;
+	out = t.rotation * (t.scale * b);
+	out = t.position + out;
+	return out;
+}
