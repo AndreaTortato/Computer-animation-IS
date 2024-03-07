@@ -134,19 +134,24 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\animation\blending.cpp" />
-    <ClCompile Include="src\animation\CCDSolver.cpp" />
+    <ClCompile Include="src\animation\CDDSolver.cpp" />
     <ClCompile Include="src\animation\clip.cpp" />
     <ClCompile Include="src\animation\FABRIKSolver.cpp" />
-    <ClCompile Include="src\animation\IKsolver.cpp" />
+    <ClCompile Include="src\animation\IKSolver.cpp" />
+    <ClCompile Include="src\animation\retargeting.cpp" />
     <ClCompile Include="src\animation\track.cpp" />
     <ClCompile Include="src\animation\transformTrack.cpp" />
     <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\external\bvh-parser.cpp" />
     <ClCompile Include="src\external\cgltf.c" />
     <ClCompile Include="src\external\stb_image.cpp" />
     <ClCompile Include="src\lab1.cpp" />
     <ClCompile Include="src\lab2.cpp" />
     <ClCompile Include="src\lab3.cpp" />
     <ClCompile Include="src\lab4.cpp" />
+    <ClCompile Include="src\lab5.cpp" />
+    <ClCompile Include="src\lab6.cpp" />
+    <ClCompile Include="src\loaders\bvhLoader.cpp" />
     <ClCompile Include="src\loaders\gLTFLoader.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\math\mat4.cpp" />
@@ -167,24 +172,30 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\animation\blending.h" />
-    <ClInclude Include="src\animation\CCDSolver.h" />
+    <ClInclude Include="src\animation\CDDSolver.h" />
     <ClInclude Include="src\animation\clip.h" />
     <ClInclude Include="src\animation\FABRIKSolver.h" />
     <ClInclude Include="src\animation\frame.h" />
     <ClInclude Include="src\animation\IKSolver.h" />
+    <ClInclude Include="src\animation\retargeting.h" />
     <ClInclude Include="src\animation\track.h" />
     <ClInclude Include="src\animation\transformTrack.h" />
     <ClInclude Include="src\application.h" />
     <ClInclude Include="src\camera.h" />
+    <ClInclude Include="src\external\bvh-parser.h" />
     <ClInclude Include="src\external\cgltf.h" />
     <ClInclude Include="src\external\nuklear.h" />
     <ClInclude Include="src\external\nuklear_glfw_gl3.h" />
     <ClInclude Include="src\external\nuklear_glfw_gl4.h" />
+    <ClInclude Include="src\external\nuklear_utils.h" />
     <ClInclude Include="src\external\stb_image.h" />
     <ClInclude Include="src\lab1.h" />
     <ClInclude Include="src\lab2.h" />
     <ClInclude Include="src\lab3.h" />
     <ClInclude Include="src\lab4.h" />
+    <ClInclude Include="src\lab5.h" />
+    <ClInclude Include="src\lab6.h" />
+    <ClInclude Include="src\loaders\bvhLoader.h" />
     <ClInclude Include="src\loaders\gLTFLoader.h" />
     <ClInclude Include="src\math\mat4.h" />
     <ClInclude Include="src\math\quat.h" />
@@ -205,8 +216,21 @@
     <ClInclude Include="src\animation\skeleton.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\Dancing.glb" />
+    <None Include="assets\Eva_Low.glb" />
+    <None Include="assets\Target.gltf" />
+    <None Include="assets\Walk.bvh" />
+    <None Include="assets\Woman.gltf" />
+    <None Include="shaders\morph.vs" />
+    <None Include="shaders\pbr.fs" />
     <None Include="shaders\shader.fs" />
     <None Include="shaders\shader.vs" />
+    <None Include="shaders\simple.fs" />
+    <None Include="shaders\skinned.vs" />
+    <None Include="shaders\texture.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\Woman.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

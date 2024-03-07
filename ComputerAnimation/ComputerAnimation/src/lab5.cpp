@@ -99,7 +99,7 @@ void Lab5::init() {
 	retargetingSolver = new Retargeting(sourceGLTF.skeleton, target.skeleton, &animationInfo.animatedPose);
 	
 	// Set current task
-	currentTask = TASK2;
+	currentTask = TASK1;
 
 	currentTime = 0.0f;
 

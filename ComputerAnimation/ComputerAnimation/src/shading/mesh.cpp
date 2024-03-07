@@ -1,16 +1,20 @@
 #include "mesh.h"
-#include "../shading/draw.h"
-#include <iostream>
+#include "draw.h"
 
 Mesh::Mesh() {
 	// allocate memory
 	posAttrib = new Attribute<vec3>();
 	normAttrib = new Attribute<vec3>();
 	uvAttrib = new Attribute<vec2>();
-	weightAttrib = new Attribute<vec4>();
-	influenceAttrib = new Attribute<ivec4>();
+
+	// for gpu skinning
+	weightsAttrib = new Attribute<vec4>();
+	influencesAttrib = new Attribute<ivec4>();
 
 	indexBuffer = new IndexBuffer();
+
+	morphTargetsAtlas = new DataTexture();
+	morphTargetsCount = new int();
 }
 
 // copy constructor
@@ -18,11 +22,15 @@ Mesh::Mesh(const Mesh& m) {
 	posAttrib = new Attribute<vec3>();
 	normAttrib = new Attribute<vec3>();
 	uvAttrib = new Attribute<vec2>();
-	weightAttrib = new Attribute<vec4>();
-	influenceAttrib = new Attribute<ivec4>();
+
+	// for gpu skinning
+	weightsAttrib = new Attribute<vec4>();
+	influencesAttrib = new Attribute<ivec4>();
 
 	indexBuffer = new IndexBuffer();
 
+	morphTargetsAtlas = new DataTexture();
+	morphTargetsCount = new int();
 	*this = m;
 }
 
@@ -34,11 +42,14 @@ Mesh& Mesh::operator=(const Mesh& other) {
 	// copy out the CPU values
 	positions = other.positions;
 	normals = other.normals;
-	uvs = other.uvs;
+	texCoords = other.texCoords;
 	weights = other.weights;
 	influences = other.influences;
 	indices = other.indices;
 
+	morphTargets = other.morphTargets;
+	material = other.material;
+	name = other.name;
 	// upload the attribute data to the GPU
 	updateOpenGLBuffers();
 	return *this;
@@ -49,29 +60,53 @@ Mesh::~Mesh() {
 	delete posAttrib;
 	delete normAttrib;
 	delete uvAttrib;
-	delete weightAttrib;
-	delete influenceAttrib;
+
+	delete weightsAttrib;
+	delete influencesAttrib;
+
 	delete indexBuffer;
+
 }
 
 // getters
 std::vector<vec3>& Mesh::getPositions() {
 	return positions;
 }
+
 std::vector<vec3>& Mesh::getNormals() {
 	return normals;
 }
-std::vector<vec2>& Mesh::getUVs() {
-	return uvs;
+
+std::vector<vec2>& Mesh::getTexCoords() {
+	return texCoords;
 }
+
 std::vector<vec4>& Mesh::getWeights() {
 	return weights;
 }
+
 std::vector<ivec4>& Mesh::getInfluences() {
 	return influences;
 }
+
 std::vector<unsigned int>& Mesh::getIndices() {
 	return indices;
+}
+
+std::vector<MorphTarget>& Mesh::getMorphTargets() {
+	return morphTargets;
+}
+
+DataTexture* Mesh::getMorphTargetsAtlas() {
+	return morphTargetsAtlas;
+}
+
+int Mesh::getMorphTargetsCount() {
+	return *morphTargetsCount;
+}
+
+Material& Mesh::getMaterial() {
+	return material;
 }
 
 // setters
@@ -79,47 +114,35 @@ void Mesh::setPositions(std::vector<vec3> pos) {
 	positions = pos;
 }
 
+void Mesh::setMaterial(Material mat) {
+	material = mat;
+}
 
+// Define the size of the texture atlas
+const int ATLAS_WIDTH = 800;
+const int ATLAS_HEIGHT = 800;
 
+// Function to encode morph target data into the texture atlas
+void Mesh::encodeMorphTargets() {
+	int offsetX = 0;
+	int offsetY = 0;
 
-// CPU skinning using matrices
-//void Mesh::CPUSkin(Skeleton& skeleton, Pose& pose) {
-//	unsigned int numVerts = positions.size();
-//	if (numVerts == 0) { return; }
-//
-//	// Make sure the skinned vectors have enough storage space
-//	skinnedPositions.resize(numVerts);
-//	skinnedNormals.resize(numVerts);
-//	Pose& bindPose = skeleton.getBindPose();
-//	for (unsigned int i = 0; i < numVerts; i++) {
-//		ivec4& joint = influences[i];
-//		vec4& weight = weights[i];
-//		Transform skin0 = combine(pose[joint.x], inverse(bindPose[joint.x]));
-//		vec3 p0 = transformPoint(skin0, positions[i]);
-//		vec3 n0 = transformVector(skin0, normals[i]);
-//		// repeat 3 more times
-//		Transform skin1 = combine(pose[joint.y], inverse(bindPose[joint.y]));
-//		vec3 p1 = transformPoint(skin1, positions[i]);
-//		vec3 n1 = transformVector(skin1, normals[i]);
-//		Transform skin2 = combine(pose[joint.z], inverse(bindPose[joint.z]));
-//		vec3 p2 = transformPoint(skin2, positions[i]);
-//		vec3 n2 = transformVector(skin2, normals[i]);
-//		Transform skin3 = combine(pose[joint.w], inverse(bindPose[joint.w]));
-//		vec3 p3 = transformPoint(skin3, positions[i]);
-//		vec3 n3 = transformVector(skin3, normals[i]);
-//		skinnedPositions[i] = p0 * weight.x +
-//			p1 * weight.y +
-//			p2 * weight.z +
-//			p3 * weight.w;
-//		skinnedNormals[i] = n0 * weight.x +
-//			n1 * weight.y +
-//			n2 * weight.z +
-//			n3 * weight.w;
-//	}
-//	// update the GPU position and normal attributes with the skinned positions and normals of all vertices
-//	posAttrib->Set(skinnedPositions);
-//	normAttrib->Set(skinnedNormals);
-//}
+	// Resize the texture assuming it will have enough space to encode all the morph targets
+	morphTargetsAtlas->Resize(ATLAS_WIDTH);
+
+	// [CA] To do: Encode each morph target into the texture data
+	for (int i = 0; i < morphTargets.size(); i++)
+	{
+		std::vector<vec3> vOffsets = morphTargets[i].vertexOffsets;
+		for (int j = 0; j < vOffsets.size(); ++j)
+		{
+			morphTargetsAtlas->SetTexel(offsetX + j, offsetY + i, vOffsets[j]);
+		}
+	}
+
+	// Loads the texture data into the GPU
+	morphTargetsAtlas->UploadTextureDataToGPU();
+}
 
 // CPU skinning using matrices
 void Mesh::CPUSkin(Skeleton& skeleton, Pose& pose) {
@@ -135,12 +158,12 @@ void Mesh::CPUSkin(Skeleton& skeleton, Pose& pose) {
 	poseMatrices = pose.getGlobalMatrices();
 	// get the inverse bind pose stored in the skeleton
 	std::vector<mat4> invBindPoseMat = skeleton.getInvBindPose();
-	
+
 	for (unsigned int i = 0; i < numVerts; i++) //i = vertex
-    { 
+	{
 		ivec4& joints = influences[i];
 		vec4& weight = weights[i];
-		
+
 		// TODO: Compute the skin matrix. For each vertex get the scaled skin matrix:
 		// 
 		// encontrar para cada joint de un vertex su matrix (4 matrices cada vertex)
@@ -162,7 +185,7 @@ void Mesh::CPUSkin(Skeleton& skeleton, Pose& pose) {
 		mat4 jointSkinMatrix_w = jointPoseTransform_w * invBindPose_w;
 
 		// Scale the resulting matrices by their corresponding weight to get the final skin matrix
-		
+
 		jointSkinMatrix_x = jointSkinMatrix_x * weight.x;
 		jointSkinMatrix_y = jointSkinMatrix_y * weight.y;
 		jointSkinMatrix_z = jointSkinMatrix_z * weight.z;
@@ -183,7 +206,6 @@ void Mesh::CPUSkin(Skeleton& skeleton, Pose& pose) {
 }
 
 
-
 // upload attribute data to the GPU 
 void Mesh::updateOpenGLBuffers() {
 	if (positions.size() > 0) {
@@ -192,18 +214,23 @@ void Mesh::updateOpenGLBuffers() {
 	if (normals.size() > 0) {
 		normAttrib->Set(normals);
 	}
-	if (uvs.size() > 0) {
-		uvAttrib->Set(uvs);
+	if (texCoords.size() > 0) {
+		uvAttrib->Set(texCoords);
 	}
 	if (weights.size() > 0) {
-		weightAttrib->Set(weights);
+		weightsAttrib->Set(weights);
 	}
 	if (influences.size() > 0) {
-		influenceAttrib->Set(influences);
+		influencesAttrib->Set(influences);
 	}
 	if (indices.size() > 0) {
 		indexBuffer->Set(indices);
 	}
+	if (morphTargets.size() > 0) {
+		encodeMorphTargets();
+		morphTargetsAtlas->UploadTextureDataToGPU();
+	}
+	
 }
 
 // bind the attributes to the specified slots
@@ -218,10 +245,10 @@ void Mesh::bind(int position, int normal, int uv, int weight, int influence) {
 		uvAttrib->BindTo(uv);
 	}
 	if (weight >= 0) {
-		weightAttrib->BindTo(weight);
+		weightsAttrib->BindTo(weight);
 	}
 	if (influence >= 0) {
-		influenceAttrib->BindTo(influence);
+		influencesAttrib->BindTo(influence);
 	}
 }
 
@@ -256,9 +283,11 @@ void Mesh::unBind(int position, int normal, int uv, int weight, int influence) {
 		uvAttrib->UnBindFrom(uv);
 	}
 	if (weight >= 0) {
-		weightAttrib->UnBindFrom(weight);
+		weightsAttrib->UnBindFrom(weight);
 	}
 	if (influence >= 0) {
-		influenceAttrib->UnBindFrom(influence);
+		influencesAttrib->UnBindFrom(influence);
 	}
 }
+
+

@@ -3,7 +3,9 @@
 #include <algorithm>
 #include "../math/transform.h"
 #include "../animation/skeleton.h"
-
+#include <vector>
+#include "../external/stb_image.h"
+#include <cassert>
 //takes a path and returns a cgltf_data pointer
 cgltf_data* loadGLTFFile(const char* path) {
 	cgltf_options options;
@@ -117,7 +119,7 @@ std::vector<std::string> loadJointNames(const cgltf_data* data) {
 			result[i] = node->name;
 		}
 	}
-	return result;
+	return result; 
 }
 
 Skeleton loadSkeleton(const cgltf_data* data) {
@@ -130,32 +132,37 @@ Skeleton loadSkeleton(const cgltf_data* data) {
 
 std::vector<Mesh> loadMeshes(const cgltf_data* data) {
 	std::vector<Mesh> result;
+	std::vector<std::vector<MorphTarget> > morphTargets;
+	
 	cgltf_node* nodes = data->nodes;
 	unsigned int nodeCount = data->nodes_count;
 
 	for (unsigned int i = 0; i < nodeCount; ++i) {
 		cgltf_node* node = &nodes[i];
 		// Only process nodes that have both a mesh and a skin
-		if (node->mesh == 0 || node->skin == 0) {
+		if (node->mesh == 0 ) {
 			continue;
 		}
 
 		int numPrims = node->mesh->primitives_count;
 		for (int j = 0; j < numPrims; ++j) {
 
-			//create a mesh for each primitive
+			// Create a mesh for each primitive
+			
 			result.push_back(Mesh());
-			Mesh& mesh = result[result.size() - 1];
-
+			Mesh &mesh = result[result.size()-1];
+			
 			cgltf_primitive* primitive = &node->mesh->primitives[j];
-
+			const char* name = node->mesh->name;
+			std::string str(name);
+			mesh.name = str;
 			// Loop through all the attributes in the primitive and populate the mesh data
 			unsigned int ac = primitive->attributes_count;
 			for (unsigned int k = 0; k < ac; ++k) {
 				cgltf_attribute* attribute = &primitive->attributes[k];
 				GLTFHelpers::meshFromAttribute(mesh, *attribute, node->skin, nodes, nodeCount);
 
-				// if the primitive has indices, the index buffer of the mesh needs to be filled out
+				// If the primitive has indices, the index buffer of the mesh needs to be filled out
 				if (primitive->indices != 0) {
 					int ic = primitive->indices->count;
 					std::vector<unsigned int>& indices = mesh.getIndices();
@@ -164,15 +171,36 @@ std::vector<Mesh> loadMeshes(const cgltf_data* data) {
 					for (unsigned int k = 0; k < ic; ++k) {
 						indices[k] = cgltf_accessor_read_index(primitive->indices, k);
 					}
-				}
-				//for render the mesh
-				mesh.updateOpenGLBuffers();
+				}				
 			}
+
+			// Assign the material information to the mesh
+			if (primitive->material) {
+				GLTFHelpers::materialFromPimitive(mesh, *primitive);
+			}
+			
+			// Loop through all the morph targets in the primitive and populate the mesh data
+			if (primitive->targets_count) {
+				GLTFHelpers::morphTargetsFromPimitive(mesh, *primitive);
+
+				std::vector<char*> names;
+				for (unsigned int n = 0; n < node->mesh->target_names_count; n++) {
+					mesh.getMorphTargets()[n].name = node->mesh->target_names[n];
+					names.push_back(node->mesh->target_names[n]);
+
+				}
+				mesh.morphTargetNames = names;
+			}
+
+			// For render the mesh
+			mesh.updateOpenGLBuffers();
 		}
 	}
-	//return the resulting vector of meshes
+
+	// Return the resulting vector of meshes
 	return result;
 }
+
 
 std::vector<Clip> loadAnimationClips(cgltf_data* data) {
 	unsigned int nuclips = data->animations_count;
@@ -287,7 +315,7 @@ void GLTFHelpers::meshFromAttribute(Mesh& outMesh, cgltf_attribute& attribute, c
 	//Create references to the position, normal, texture coordinate, influences, and weights vectors of the mesh
 	std::vector<vec3>& positions = outMesh.getPositions();
 	std::vector<vec3>& normals = outMesh.getNormals();
-	std::vector<vec2>& texCoords = outMesh.getUVs();
+	std::vector<vec2>& texCoords = outMesh.getTexCoords();
 	std::vector<ivec4>& influences = outMesh.getInfluences();
 	std::vector<vec4>& weights = outMesh.getWeights();
 
@@ -349,6 +377,151 @@ void GLTFHelpers::meshFromAttribute(Mesh& outMesh, cgltf_attribute& attribute, c
 		}
 	}
 }
+
+void GLTFHelpers::morphTargetsFromPimitive(Mesh& outMesh, cgltf_primitive& primitive) {
+	std::vector<MorphTarget> &morphTargets = outMesh.getMorphTargets();
+	morphTargets.resize(primitive.targets_count);
+
+	// Loop through all the targets in the primitive and populate the mesh data
+	for (unsigned int k = 0; k < primitive.targets_count; ++k) {
+		cgltf_morph_target* morphTarget = &primitive.targets[k];
+	
+		MorphTarget& mt = morphTargets[k];
+
+		for (unsigned int t = 0; t < morphTarget->attributes_count; t++) {
+
+			cgltf_attribute_type attribType = morphTarget->attributes[t].type;
+			cgltf_accessor& accessor = *morphTarget->attributes[t].data;
+
+			// Get how many attributes the current component has
+			unsigned int componentCount = 0;
+			if (accessor.type == cgltf_type_vec2) {
+				componentCount = 2;
+			}
+			else if (accessor.type == cgltf_type_vec3) {
+				componentCount = 3;
+			}
+			else if (accessor.type == cgltf_type_vec4) {
+				componentCount = 4;
+			}
+
+			// Parse the data
+			std::vector<float> values;
+			getScalarValues(values, componentCount, accessor);
+			unsigned int acessorCount = accessor.count;
+
+
+			// Loop through all the values in the current accessor and assign them to the appropriate vector based on the accessor type
+			for (unsigned int i = 0; i < acessorCount; ++i) {
+				int index = i * componentCount;
+				switch (attribType)
+				{
+				case cgltf_attribute_type_position:
+					mt.vertexOffsets.push_back(vec3(values[index + 0], values[index + 1], values[index + 2]));
+					break;
+
+				case cgltf_attribute_type_normal:
+				{
+					vec3 normal = vec3(values[index + 0], values[index + 1], values[index + 2]);
+					// If the normal is not normalized, normalize it
+					if (lenSq(normal) < 0.000001f) {
+						normal = vec3(0, 1, 0);
+					}
+					mt.normals.push_back(normalized(normal));
+				}
+				break;
+
+				}
+			}
+		}
+	}
+
+}
+
+void GLTFHelpers::materialFromPimitive(Mesh& outMesh, cgltf_primitive& primitive) {
+	Material& material = outMesh.getMaterial();
+	if (primitive.material->has_pbr_metallic_roughness) {
+
+		material.colorTexture = new Texture();
+
+		cgltf_pbr_metallic_roughness pbr_material = primitive.material->pbr_metallic_roughness;
+		cgltf_texture* tex = pbr_material.base_color_texture.texture;
+		if (tex != NULL) {
+
+			cgltf_buffer_view* b = tex->image->buffer_view;
+			int width, height, numComponents;
+			const unsigned char* data = b->offset + (unsigned char*)b->buffer->data;
+			int byteCount = b->size;
+			if (!stbi_info_from_memory(data, byteCount, &width, &height, &numComponents)) {
+				assert(false);
+			}
+			unsigned char* imageData = stbi_load_from_memory(data, byteCount, &width, &height, &numComponents, 4);
+
+			material.colorTexture->Load(imageData, width, height, numComponents);
+			stbi_image_free(imageData);
+		}
+		float* colorFactor = pbr_material.base_color_factor;
+		material.baseColor = vec4(*colorFactor, *colorFactor, *colorFactor, 1.f);
+		material.metallic = pbr_material.metallic_factor;
+		material.roughness = pbr_material.roughness_factor;
+
+		material.metallicTexture = new Texture();
+		cgltf_texture* metallicTexture = primitive.material->pbr_metallic_roughness.metallic_roughness_texture.texture;
+		if (metallicTexture != NULL) {
+
+			cgltf_buffer_view* b = metallicTexture->image->buffer_view;
+			int width, height, numComponents;
+			const unsigned char* data = b->offset + (unsigned char*)b->buffer->data;
+			int byteCount = b->size;
+			if (!stbi_info_from_memory(data, byteCount, &width, &height, &numComponents)) {
+				assert(false);
+			}
+			unsigned char* imageData = stbi_load_from_memory(data, byteCount, &width, &height, &numComponents, 4);
+			material.metallicTexture->Load(imageData, width, height, numComponents);
+			stbi_image_free(imageData);
+		}
+
+	}
+	material.normalMap = new Texture();
+	cgltf_texture* normalTex = primitive.material->normal_texture.texture;
+	if (normalTex != NULL) {
+
+		cgltf_buffer_view* b = normalTex->image->buffer_view;
+		int width, height, numComponents;
+		const unsigned char* data = b->offset + (unsigned char*)b->buffer->data;
+		int byteCount = b->size;
+		if (!stbi_info_from_memory(data, byteCount, &width, &height, &numComponents)) {
+			assert(false);
+		}
+		unsigned char* imageData = stbi_load_from_memory(data, byteCount, &width, &height, &numComponents, 4);
+		material.normalMap->Load(imageData, width, height, numComponents);
+		stbi_image_free(imageData);
+	}
+	if (primitive.material->has_specular) {
+		material.specular = primitive.material->specular.specular_factor;
+	}
+
+
+	material.double_side = primitive.material->double_sided;
+	material.alpha_cutoff = primitive.material->alpha_cutoff;
+	switch (primitive.material->alpha_mode)
+	{
+	case cgltf_alpha_mode_blend:
+		material.alpha_mode = alphaMode::ALPHA_BLEND;
+		break;
+	case cgltf_alpha_mode_opaque:
+		material.alpha_mode = alphaMode::ALPHA_OPAQUE;
+		break;
+	case cgltf_alpha_mode_mask:
+		material.alpha_mode = alphaMode::ALPHA_MASK;
+		break;
+
+	default:
+		material.alpha_mode = alphaMode::ALPHA_OPAQUE;
+		break;
+	}
+}
+
 
 // converts a glTF animation channel into a VectorTrack or a QuaternionTrack
 template<typename T, int N>

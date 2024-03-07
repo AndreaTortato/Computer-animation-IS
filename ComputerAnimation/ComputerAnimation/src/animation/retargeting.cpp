@@ -54,7 +54,27 @@ void Retargeting::fixBindPose() {
 	Pose& srcBindPose = source.getBindPose();
 	
 	// [CA] To do: (TASK 4) Perform Auto Facing/Alingment to the src bind pose so it faces the +Z axis
-	// ..
+	// Calculate the orientation of the spine chain
+	vec3 spineDirection = srcBindPose.getGlobalTransform(spineChain.y).position - srcBindPose.getGlobalTransform(spineChain.x).position;
+	vec3 zDirection = vec3(0, 0, 1); 
+
+	if (spineDirection != zDirection) //not facing z-axis
+	{
+		// Calculate the rotation axis using the cross product
+		vec3 axisRotation = cross(spineDirection, zDirection);
+		float angleRotation = dot(spineDirection, zDirection);
+
+		// Apply the rotation to the hips
+		for (int id = 0; id < srcBindPose.size(); id++)
+		{
+			std::string name = source.getJointName(id);
+
+			if (name == "Hips" || name == "mixamorig:Hips")
+			{
+				srcBindPose.getGlobalTransform(id).rotation = angleAxis(angleRotation, axisRotation) * srcBindPose.getGlobalTransform(id).rotation;
+			}
+		}
+	}
 	
 	// [CA] To do: (TASK 3) Perform Auto Posing so the src bind pose matches a T-pose
 	// Make the left leg follow the -Y axis
@@ -154,7 +174,7 @@ void Retargeting::solve(Pose& targetPose) {
 
 		std::string name = source.getJointName(sourceId);
 		std::string Tname = target.getJointName(targetId);
-		// std::cout << name << ", " << Tname << std::endl; //mapping in correct, for now the math below is the problem
+		//std::cout << name << ", " << Tname << std::endl; //mapping in correct, for now the math below is the problem
 
 		Transform srcWorldBindPose = source.getBindPose().getGlobalTransform(sourceId);
 		Transform tgtWorldBindPose = target.getBindPose().getGlobalTransform(targetId);
@@ -171,7 +191,7 @@ void Retargeting::solve(Pose& targetPose) {
 		quat srcLocalAnimated = currentSourcePose->getLocalTransform(sourceId).rotation;
 		quat animatedBoneRot = inverse(srcParentWorld) * srcLocalAnimated;
 
-		//3. Apply the bind rotation difference
+		// 3. Apply the bind rotation difference
 		animatedBoneRot = animatedBoneRot * rotationDifference;
 
 		// 4. Convert down the computed bone rotation to Target local space by using Target parent world bone
@@ -200,7 +220,7 @@ void Retargeting::solve(Pose& targetPose) {
 			newHipsPos = tgtBindPos + newHipsPos;
 
 			// Apply the new position to the retargeted local transform
-			//localRetarget.position = newHipsPos;
+			localRetarget.position = newHipsPos;
 		}
 
 		// Set the retargeted transformation to the evaluated joint of the target pose

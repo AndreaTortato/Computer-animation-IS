@@ -7,6 +7,7 @@
 #include "lab3.h"
 #include "lab4.h"
 #include "lab5.h"
+#include "lab6.h"
 
 LabSelector::LabSelector() {
 	mCurrentLab = 0;
@@ -16,9 +17,9 @@ LabSelector::LabSelector() {
 void LabSelector::ImGui(nk_context* context, float xPos) {
 
 	// Select lab
-	static int selected = 4;
-	static const char* options[] = { "Lab 1", "Lab 2", "Lab 3", "Lab 4", "Lab 5"};
-	enum examples { LAB1 = 0, LAB2 = 1, LAB3 = 2, LAB4 = 3, LAB5 = 4 };
+	static int selected = 5;
+	static const char* options[] = { "Lab 1", "Lab 2", "Lab 3", "Lab 4", "Lab 5", "Lab 6"};
+	enum examples { LAB1 = 0, LAB2 = 1, LAB3 = 2, LAB4 = 3, LAB5 = 4, LAB6 = 5 };
 
 	if (nk_begin(context, "Lab settings", nk_rect(5.0f, 5.0f, 300.0f, 70), NK_WINDOW_MOVABLE | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_MINIMIZABLE)) {
 
@@ -52,12 +53,19 @@ void LabSelector::ImGui(nk_context* context, float xPos) {
 				break;
 			case LAB4:
 				if (mCurrentLab == 0 || typeid(*mCurrentLab) != typeid(Lab4)) {
-					
+					mCurrentLab = new Lab4();
+					mCurrentLab->init();
 				}
 				break;
 			case LAB5:
 				if (mCurrentLab == 0 || typeid(*mCurrentLab) != typeid(Lab5)) {
 					mCurrentLab = new Lab5();
+					mCurrentLab->init();
+				}
+				break;
+			case LAB6:
+				if (mCurrentLab == 0 || typeid(*mCurrentLab) != typeid(Lab6)) {
+					mCurrentLab = new Lab6();
 					mCurrentLab->init();
 				}
 				break;

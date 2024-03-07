@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 
 template<typename T>
 struct TVec2 {
@@ -18,5 +19,12 @@ struct TVec2 {
 template<typename T>
 inline TVec2<T> operator-(const TVec2<T>& l, const TVec2<T>& r) { return TVec2<T>(l.x - r.x, l.y - r.y); };
 
+template<typename T>
+inline TVec2<T> operator+(const TVec2<T>& l, const TVec2<T>& r) { return TVec2<T>(l.x + r.x, l.y + r.y); };
+
+template<typename T>
+inline float distance(const TVec2<T>& p1, const TVec2<T>& p2) {
+	return std::sqrt(std::pow(p2.x - p1.x, 2) + std::pow(p2.y - p1.y, 2));
+}
 typedef TVec2<float> vec2;
 typedef TVec2<int> ivec2;

@@ -19,6 +19,9 @@ namespace GLTFHelpers {
 	int getNodeIndex(cgltf_node* target, cgltf_node* allNodes, unsigned int numNodes);
 	void getScalarValues(std::vector<float>& out, unsigned int compCount, const cgltf_accessor& inAccessor);
 	void meshFromAttribute(Mesh& outMesh, cgltf_attribute& attribute, cgltf_skin* skin, cgltf_node* nodes, unsigned int nodeCount);
+	void morphTargetsFromPimitive(Mesh& outMesh, cgltf_primitive& primitive);
+	void materialFromPimitive(Mesh& outMesh, cgltf_primitive& primitive);
+	void encodeMorphTargets(std::vector<MorphTarget>& morphTargets, Texture& textureData);
 	template<typename T, int N>
 	void trackFromChannel(Track<T, N>& result, const cgltf_animation_channel& channel);
 };

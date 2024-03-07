@@ -96,16 +96,31 @@
     <ClCompile Include="src\animation\blending.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="src\animation\CCDSolver.cpp">
+    <ClCompile Include="src\lab4.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\animation\CDDSolver.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\animation\IKSolver.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
     <ClCompile Include="src\animation\FABRIKSolver.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="src\animation\IKsolver.cpp">
+    <ClCompile Include="src\animation\retargeting.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="src\lab4.cpp">
+    <ClCompile Include="src\external\bvh-parser.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\loaders\bvhLoader.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lab5.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lab6.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
@@ -206,7 +221,13 @@
     <ClInclude Include="src\animation\blending.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="src\animation\CCDSolver.h">
+    <ClInclude Include="src\external\nuklear_glfw_gl3.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lab4.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="src\animation\CDDSolver.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="src\animation\FABRIKSolver.h">
@@ -215,15 +236,42 @@
     <ClInclude Include="src\animation\IKSolver.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="src\lab4.h">
+    <ClInclude Include="src\animation\retargeting.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="src\external\nuklear_glfw_gl3.h">
+    <ClInclude Include="src\external\bvh-parser.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="src\loaders\bvhLoader.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lab5.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lab6.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="src\external\nuklear_utils.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\shader.fs" />
     <None Include="shaders\shader.vs" />
+    <None Include="shaders\skinned.vs" />
+    <None Include="shaders\texture.fs" />
+    <None Include="assets\Dancing.glb" />
+    <None Include="assets\Target.gltf" />
+    <None Include="assets\Walk.bvh" />
+    <None Include="assets\Woman.gltf" />
+    <None Include="shaders\simple.fs" />
+    <None Include="shaders\morph.vs" />
+    <None Include="shaders\pbr.fs" />
+    <None Include="assets\Eva_Low.glb" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\Woman.png">
+      <Filter>Archivos de recursos</Filter>
+    </Image>
   </ItemGroup>
 </Project>

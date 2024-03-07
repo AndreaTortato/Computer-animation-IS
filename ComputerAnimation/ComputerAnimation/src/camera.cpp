@@ -27,7 +27,6 @@ vec3 Camera::projectVector(vec3 pos, bool& negZ)
 
 void Camera::rotate(float angle, const vec3& axis)
 {
-
 	vec3 front = center - eye;
 	//normalize(front);
 	quat rotation = angleAxis(angle, axis);
@@ -41,7 +40,6 @@ void Camera::rotate(float angle, const vec3& axis)
 
 void Camera::orbit(float angle, const vec3& axis)
 {
-
 	vec3 front = eye - center;
 	//normalize(front);
 	quat rotation = angleAxis(angle, axis);
@@ -50,6 +48,15 @@ void Camera::orbit(float angle, const vec3& axis)
 
 	vec3 newFront = transformVector(t, front);
 	eye = newFront + center;
+	updateViewMatrix();
+}
+
+void Camera::zoom(float scale)
+{
+	vec3 front = eye - center;
+	//normalize(front);
+
+	eye = front*scale + center;
 	updateViewMatrix();
 }
 

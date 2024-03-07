@@ -5,8 +5,6 @@
 class Camera
 {
 	// OpenGL methods to fill matrices
-
-
 public:
 
 	// Types of cameras available
@@ -41,6 +39,7 @@ public:
 	void move(vec3 delta);
 	void rotate(float angle, const vec3& axis);
 	void orbit(float angle, const vec3& axis);
+	void zoom(float scale);
 
 	// Transform a local camera vector to world coordinates
 	vec3 getLocalVector(const vec3& v);
