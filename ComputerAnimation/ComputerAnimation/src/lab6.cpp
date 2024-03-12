@@ -159,6 +159,14 @@ void Lab6::createFaceEmotions() {
 		}
 	}
 
+    emotions[0].morphTargetsMapInfluences = neutralMorphMapWeights;
+    emotions[1].morphTargetsMapInfluences = happinessMorphMapWeights;
+    emotions[2].morphTargetsMapInfluences = sadnessMorphMapWeights;
+    emotions[3].morphTargetsMapInfluences = surpriseMorphMapWeights;
+    emotions[4].morphTargetsMapInfluences = angerMorphMapWeights;
+    emotions[5].morphTargetsMapInfluences = disgustMorphMapWeights;
+    emotions[6].morphTargetsMapInfluences = fearMorphMapWeights;
+
 	// Init the Valence-Arousal model grid, precomputing the weights for each cell using Voronoid interpolation
     std::vector<vec2> points;
 	for (unsigned int i = 0; i < emotions.size(); i++) 

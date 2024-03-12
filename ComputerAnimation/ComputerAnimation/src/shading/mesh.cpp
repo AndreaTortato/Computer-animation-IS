@@ -140,16 +140,16 @@ void Mesh::encodeMorphTargets() {
         for (int j = 0; j < numVertices; ++j) 
         {
             // x and y positions in texture atlas
-            int x = (offsetX + j) % ATLAS_WIDTH;
-            int y = offsetY + (offsetX + j) / ATLAS_WIDTH;
+            // int x = (offsetX + j) % ATLAS_WIDTH;
+            // int y = offsetY + (offsetX + j) / ATLAS_WIDTH;
 
             // Encode the morph target data into the texture atlas
-            morphTargetsAtlas->SetTexel(x, y, vOffsets[j]);
+            morphTargetsAtlas->SetTexel(i, j, vOffsets[j]); //(x, y, vOffsets[j])
         }
 
         // update offsest
-        offsetY = offsetY + (numVertices + offsetX) / ATLAS_WIDTH;
-        offsetX = (offsetX + numVertices) % ATLAS_WIDTH;
+        // offsetY = offsetY + (numVertices + offsetX) / ATLAS_WIDTH;
+        // offsetX = (offsetX + numVertices) % ATLAS_WIDTH;
     }
 
 	// Loads the texture data into the GPU
