@@ -149,8 +149,6 @@ void Lab6::createFaceEmotions() {
 	{
 		for (unsigned int j = 0; j < entity.morphTargetNames[i].size(); j++) 
 		{
-			std::string name = entity.morphTargetNames[i][j];
-
 			neutralMorphMapWeights[i].push_back(vec2(j, emotions[0].weight));
 			happinessMorphMapWeights[i].push_back(vec2(j, emotions[1].weight));
 			sadnessMorphMapWeights[i].push_back(vec2(j, emotions[2].weight));
@@ -407,7 +405,8 @@ void Lab6::update(float inDeltaTime) {
 		// Compute the new local rotation for the head joint and update its transform for the entity pose
 		Transform localHead;
 		localHead.rotation = globalRotation;
-		
+		localHead.position = localHead.position + vec3(0, 9, 0); //fix
+
 		if (entity.headJointIdx > -1) 
 		{
 			entity.pose.setLocalTransform(entity.headJointIdx, localHead);
@@ -592,7 +591,6 @@ void Lab6::ImGui(nk_context* context) {
 		canvas_end(context, &canvas);
 	}
 }
-
 
 
 void Lab6::precomputeVoronoi(const int gridSize, const std::vector<vec2>& points, std::vector<float>& values) {

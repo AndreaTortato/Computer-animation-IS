@@ -130,15 +130,27 @@ void Mesh::encodeMorphTargets() {
 	// Resize the texture assuming it will have enough space to encode all the morph targets
 	morphTargetsAtlas->Resize(ATLAS_WIDTH);
 
-	// [CA] To do: Encode each morph target into the texture data
-	for (int i = 0; i < morphTargets.size(); i++)
-	{
-		std::vector<vec3> vOffsets = morphTargets[i].vertexOffsets;
-		for (int j = 0; j < vOffsets.size(); ++j)
-		{
-			morphTargetsAtlas->SetTexel(offsetX + j, offsetY + i, vOffsets[j]);
-		}
-	}
+	// [CA] To do: Encode each morph ta rget into the texture data
+    for (int i = 0; i < morphTargets.size(); ++i) {
+
+        std::vector<vec3> vOffsets = morphTargets[i].vertexOffsets;
+        int numVertices = vOffsets.size();
+
+        // Encode the vertex offsets of the current morph target
+        for (int j = 0; j < numVertices; ++j) 
+        {
+            // x and y positions in texture atlas
+            int x = (offsetX + j) % ATLAS_WIDTH;
+            int y = offsetY + (offsetX + j) / ATLAS_WIDTH;
+
+            // Encode the morph target data into the texture atlas
+            morphTargetsAtlas->SetTexel(x, y, vOffsets[j]);
+        }
+
+        // update offsest
+        offsetY = offsetY + (numVertices + offsetX) / ATLAS_WIDTH;
+        offsetX = (offsetX + numVertices) % ATLAS_WIDTH;
+    }
 
 	// Loads the texture data into the GPU
 	morphTargetsAtlas->UploadTextureDataToGPU();

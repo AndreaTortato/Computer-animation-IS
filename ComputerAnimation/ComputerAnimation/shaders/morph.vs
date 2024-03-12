@@ -28,7 +28,7 @@ vec4 getMorph( const int vertexIndex, const int morphTargetIndex )
 {
 	ivec2 texCoord = ivec2(vertexIndex, morphTargetIndex);
 
-	// used to fetch texels from a texture
+    // read the texture using the computed x and y coordinates
 	vec4 offset = texelFetch(morphTargetsTexture, texCoord, 0); 
 	return offset;
 }
@@ -39,10 +39,10 @@ void main()
 	vec3 transformed = vec3( position );
 
 	// [CA] To do: For each morph target, accumulate the offset position taking into account its influence
-	for (int i = 0; i < numMorphTargets; ++i) 
+	for (int i = 0; i < numMorphTargets; i++) 
 	{
-        vec4 offset = getMorph(gl_VertexID, i);
-        transformed += morphTargetInfluences[i] * offset.xyz;
+        vec4 offset = getMorph(gl_VertexID, i) * morphTargetInfluences[i];
+        transformed = transformed + offset.xyz;
     }
 
 	// Compute skinning

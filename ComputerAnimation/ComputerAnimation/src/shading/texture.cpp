@@ -187,7 +187,7 @@ void DataTexture::UnSet(unsigned int textureIndex) {
 void DataTexture::SetTexel(unsigned int x, unsigned int y, const vec3& v) {
 	// [CA] To do: Compute the current index where to start saving the data into the array mData. Assume the data has 4 channels (RGBA). 
 	// Find the index of the array given the x and y coordinates of the texture and the mSize (width of the texture, it assumes that its squared)
-	unsigned int index = 4 * (y * mSize + x); 
+	unsigned int index = x * mSize + y; 
 	
 	// Set the data into the mData. Put a 0 in the last channel.
 	mData[index] = v.x;
